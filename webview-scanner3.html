@@ -3,760 +3,717 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-<title>Android JSInterface Lab</title>
+<title>JSBridge Security Scanner</title>
 <style>
 :root {
---bg: #1e1e2e; --card: #2a2a3e; --card-hover: #3a3a4e;
---text: #e0e0e0; --text-dim: #888;
---blue: #4fc3f7; --red: #ef5350; --yellow: #ffb74d; --green: #81c784;
---purple: #ba68c8; --orange: #ff8a65; --border: #404060;
-}
-[data-theme="light"] {
---bg: #f5f5f5; --card: #ffffff; --card-hover: #e8e8e8;
---text: #333; --text-dim: #666; --border: #ddd;
+  --bg: #0a0a10; --card: #13131f; --card-hover: #1c1c2e; --border: #2d2d44;
+  --text: #e0e0e0; --text-dim: #8a8a9f;
+  --blue: #00e5ff; --red: #ff3366; --yellow: #ffc107; --green: #00e676;
+  --purple: #d500f9; --orange: #ff9100;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.4; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; background: var(--bg); color: var(--text); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-.header { background: var(--card); padding: 10px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.header h1 { font-size: 1em; color: var(--blue); }
-.header .desc { font-size: 0.75em; color: var(--text-dim); flex: 1; min-width: 200px; }
-.theme-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85em; }
+/* 顶部 */
+.header { background: var(--card); padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+.header h1 { font-size: 1.1em; color: var(--blue); text-shadow: 0 0 10px rgba(0,229,255,0.3); }
+.header-info { font-size: 0.75em; color: var(--text-dim); }
+.stats-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.stat-badge { padding: 4px 10px; border-radius: 4px; font-weight: bold; background: var(--bg); border: 1px solid var(--border); font-size: 0.8em; }
 
-.layout { display: grid; grid-template-columns: 300px 1fr 300px; gap: 0; height: calc(100vh - 50px); }
-.panel { background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+/* 三栏布局 */
+.workspace { display: flex; flex: 1; overflow: hidden; }
+.panel { display: flex; flex-direction: column; background: var(--bg); border-right: 1px solid var(--border); min-width: 0; }
+.panel-title { background: var(--card); padding: 10px 12px; font-weight: bold; color: var(--text); border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
+.panel-content { flex: 1; overflow-y: auto; padding: 10px; }
 
-.panel-header { padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--bg); }
-.panel-title { font-weight: 600; font-size: 0.85em; color: var(--orange); }
-.panel-body { flex: 1; overflow-y: auto; padding: 8px; }
+/* 按钮 */
+.btn { padding: 5px 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.85em; }
+.btn:hover { background: var(--card-hover); border-color: var(--blue); }
+.btn.primary { background: rgba(0,229,255,0.1); border-color: var(--blue); color: var(--blue); }
+.btn.danger { background: rgba(255,51,102,0.1); border-color: var(--red); color: var(--red); }
+.btn.warn { background: rgba(255,193,7,0.1); border-color: var(--yellow); color: var(--yellow); }
 
-.search-input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); font-size: 0.85em; margin-top: 6px; }
+/* 输入框 */
+.input-base { width: 100%; padding: 8px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: monospace; margin-bottom: 8px; outline: none; font-size: 0.85em; }
+.input-base:focus { border-color: var(--blue); }
 
-.toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 6px 8px; border-bottom: 1px solid var(--border); }
-.btn { padding: 4px 8px; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--text); font-size: 0.75em; cursor: pointer; }
-.btn:hover { background: var(--card-hover); }
-.btn.primary { background: var(--blue); color: #000; border-color: var(--blue); }
-.btn.danger { background: var(--red); color: #fff; border-color: var(--red); }
+/* 列表项 */
+.list-item { padding: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: 0.2s; }
+.list-item:hover, .list-item.active { border-color: var(--blue); background: var(--card-hover); }
+.risk-tag { padding: 2px 6px; border-radius: 3px; font-size: 0.7em; font-weight: bold; margin-left: 6px; color: #fff; }
+.r-crit { background: var(--red); }
+.r-high { background: var(--orange); }
+.r-med { background: var(--yellow); color: #000; }
+.r-low { background: var(--green); color: #000; }
+.r-none { background: var(--border); }
 
-/* 方法名字典爆破 */
-.brute-section { padding: 8px; border-bottom: 1px solid var(--border); background: var(--bg); }
-.brute-title { font-size: 0.85em; color: var(--red); margin-bottom: 6px; font-weight: 600; }
-.brute-row { display: flex; gap: 4px; align-items: center; }
-.brute-progress { font-size: 0.75em; color: var(--text-dim); margin-top: 6px; }
-.brute-results { margin-top: 6px; max-height: 120px; overflow-y: auto; font-size: 0.75em; }
-.brute-item { padding: 2px 4px; margin: 1px 0; background: var(--card); border-radius: 2px; cursor: pointer; }
-.brute-item.found { border-left: 2px solid var(--green); }
-.brute-item.error { border-left: 2px solid var(--yellow); }
-
-/* 对象列表 */
-.object-item { padding: 6px 8px; margin-bottom: 3px; background: var(--bg); border-radius: 3px; cursor: pointer; border-left: 3px solid transparent; font-size: 0.85em; }
-.object-item:hover { background: var(--card-hover); }
-.object-item.active { border-left-color: var(--blue); background: var(--card-hover); }
-.obj-name { font-weight: 600; font-family: monospace; }
-.obj-type { color: var(--text-dim); font-size: 0.8em; margin-left: 4px; }
-.obj-tag { font-size: 0.7em; padding: 1px 4px; border-radius: 2px; margin-left: 4px; }
-.tag-baseline { background: var(--green); color: #000; }
-.tag-risk-high { background: var(--red); color: #fff; }
-.tag-risk-medium { background: var(--yellow); color: #000; }
-.tag-risk-low { background: var(--green); color: #000; }
-.tag-risk-pending { background: var(--purple); color: #fff; }
-
-/* 树形结构 */
-.tree-node { margin-left: 0; }
-.tree-item { display: flex; align-items: center; gap: 4px; padding: 2px 0; font-size: 0.85em; }
-.tree-toggle { width: 14px; cursor: pointer; color: var(--text-dim); font-size: 0.7em; text-align: center; }
-.tree-toggle:hover { color: var(--text); }
-.tree-key { font-family: monospace; cursor: pointer; }
-.tree-key:hover { color: var(--blue); }
-.tree-key.function { color: var(--blue); }
-.tree-key.object { color: var(--green); }
-.tree-type { font-size: 0.7em; color: var(--text-dim); background: var(--card); padding: 0 3px; border-radius: 2px; }
-.tree-val { font-size: 0.75em; color: var(--text-dim); max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+/* 树形 */
+.tree-node { margin-bottom: 3px; }
+.tree-header { display: flex; align-items: center; padding: 4px 6px; border-radius: 4px; cursor: pointer; gap: 6px; }
+.tree-header:hover { background: var(--card); }
+.tree-toggle { width: 16px; color: var(--text-dim); cursor: pointer; font-size: 0.7em; }
+.tree-key { color: var(--blue); font-weight: bold; font-size: 0.9em; }
+.tree-key.function { color: var(--green); }
+.tree-type { color: var(--text-dim); font-size: 0.75em; background: var(--card); padding: 1px 4px; border-radius: 2px; }
+.tree-val { color: var(--text-dim); font-size: 0.8em; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
 .tree-children { margin-left: 16px; display: none; }
 .tree-children.show { display: block; }
+.action-btn { font-size: 0.7em; padding: 2px 6px; margin-left: auto; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; color: var(--text); cursor: pointer; }
+.action-btn:hover { background: var(--blue); color: #000; }
 
-/* 调用面板 */
-.call-section { margin-bottom: 10px; padding: 8px; background: var(--bg); border-radius: 4px; }
-.call-label { font-size: 0.75em; color: var(--text-dim); margin-bottom: 4px; }
-.call-path { font-family: monospace; color: var(--green); font-size: 0.85em; word-break: break-all; }
-.call-input { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 3px; background: var(--card); color: var(--text); font-family: monospace; font-size: 0.85em; }
-.call-row { display: flex; gap: 6px; align-items: center; }
-.call-row label { font-size: 0.75em; display: flex; align-items: center; gap: 4px; }
-.call-result { margin-top: 8px; padding: 8px; background: var(--bg); border-radius: 3px; font-size: 0.8em; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 150px; overflow: auto; display: none; }
-.call-result.show { display: block; }
-.call-result.ok { border-left: 3px solid var(--green); }
-.call-result.err { border-left: 3px solid var(--red); }
+/* 终端 */
+.terminal { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 8px; flex: 1; overflow-y: auto; font-family: "Courier New", monospace; font-size: 0.8em; margin-bottom: 8px; min-height: 100px; }
+.log-line { margin-bottom: 3px; word-break: break-all; line-height: 1.3; }
+.log-time { color: var(--text-dim); margin-right: 6px; font-size: 0.9em; }
+.log-info { color: var(--green); }
+.log-warn { color: var(--yellow); }
+.log-err { color: var(--red); }
+.log-hook { color: var(--purple); }
 
-/* Deeplink测试 */
-.deeplink-section { padding: 8px; background: var(--bg); border-radius: 4px; margin-top: 10px; }
-.deeplink-title { font-size: 0.85em; color: var(--blue); margin-bottom: 8px; }
+/* 爆破区 */
+.brute-section { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 10px; }
+.brute-title { color: var(--red); font-size: 0.9em; margin-bottom: 8px; font-weight: bold; }
+.brute-progress { font-size: 0.75em; color: var(--text-dim); margin-top: 6px; }
 
-/* 统计 */
-.stats { padding: 8px; border-top: 1px solid var(--border); font-size: 0.75em; color: var(--text-dim); }
-.stats span { color: var(--blue); }
+/* 空状态 */
+.empty { color: var(--text-dim); text-align: center; padding: 30px 15px; font-size: 0.85em; }
 
-/* 移动端 */
+/* 弹窗 */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
+.modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 8px; width: 100%; max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; }
+.modal-header { padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-body { padding: 15px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.85em; }
+
+/* Bridge类型徽章 */
+.bridge-badge { padding: 3px 8px; border-radius: 3px; font-size: 0.75em; font-weight: bold; }
+.bridge-badge.android { background: #3ddc84; color: #000; }
+.bridge-badge.ios { background: #007aff; color: #fff; }
+.bridge-badge.thirdparty { background: var(--purple); color: #fff; }
+.bridge-badge.unknown { background: var(--text-dim); color: #fff; }
+
+/* 移动端适配 */
 @media (max-width: 900px) {
-.layout { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
-.panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 40vh; }
+  .workspace { flex-direction: column; overflow-y: auto; }
+  .panel { border-right: none; border-bottom: 1px solid var(--border); flex: none; }
+  .panel:first-child { flex: 0 0 auto; max-height: 35vh; }
+  .panel:nth-child(2) { flex: 0 0 auto; max-height: 35vh; }
+  .panel:last-child { flex: 1; min-height: 40vh; border-bottom: none; }
+  .header { padding: 10px; }
+  .header h1 { font-size: 1em; }
+  .stat-badge { padding: 3px 6px; font-size: 0.7em; }
+  .list-item { padding: 8px; }
+  .terminal { min-height: 80px; }
 }
-
-.empty { color: var(--text-dim); text-align: center; padding: 20px; font-size: 0.85em; }
 </style>
 </head>
 <body>
+
 <div class="header">
-<h1>🔧 Android JSInterface Lab</h1>
-<div class="desc">专门用于检测和测试 Android addJavascriptInterface 暴露给 JS 的对象与方法。</div>
-<button class="theme-btn" onclick="toggleTheme()">🌓 切换主题</button>
+  <div>
+    <h1>🛡️ JSBridge Scanner</h1>
+    <div class="header-info" id="envInfo">加载中...</div>
+  </div>
+  <div class="stats-row">
+    <span class="bridge-badge unknown" id="bridgeBadge">未识别</span>
+    <div class="stat-badge" style="color:var(--red)">高危: <span id="statHigh">0</span></div>
+    <div class="stat-badge" style="color:var(--yellow)">中危: <span id="statMed">0</span></div>
+    <button class="btn primary" onclick="exportReport()">📄 报告</button>
+  </div>
 </div>
 
-<div class="layout">
-<!-- 左侧：对象发现 -->
-<div class="panel">
-<div class="panel-header">
-<div class="panel-title">📦 候选对象</div>
-<input type="text" class="search-input" id="searchObj" placeholder="搜索对象名、方法名、关键字" oninput="filterList()">
-</div>
-<div class="toolbar">
-<button class="btn primary" onclick="rescan()">🔄 重新扫描</button>
-<button class="btn" onclick="expandTreeAll()">展开</button>
-<button class="btn" onclick="collapseTreeAll()">折叠</button>
-<button class="btn" onclick="exportData()">导出JSON</button>
-</div>
-<!-- 方法名字典爆破 -->
-<div class="brute-section">
-<div class="brute-title">🔥 方法名字典爆破</div>
-<div class="brute-row">
-<select class="call-input" id="bruteTarget" style="width:45%;">
-<option value="">选择对象...</option>
-</select>
-<button class="btn primary" id="bruteBtn" onclick="startBrute()">START</button>
-<button class="btn danger" onclick="stopBrute()">STOP</button>
-</div>
-<div class="brute-progress" id="bruteProgress">就绪，点击 START 开始爆破</div>
-<div class="brute-results" id="bruteResults"></div>
-</div>
-<div class="panel-body" id="objList"></div>
-<div class="stats">
-非基线对象: <span id="countNonBaseline">0</span> |
-已见函数: <span id="countFunctions">0</span>
-</div>
+<div class="workspace">
+  <!-- 左侧：对象列表 -->
+  <div class="panel" style="width: 280px; flex-shrink: 0;">
+    <div class="panel-title">
+      <span>📦 注入对象</span>
+      <button class="btn" style="padding:2px 6px;font-size:0.8em" onclick="runScan()">🔄</button>
+    </div>
+    <div class="panel-content">
+      <input type="text" class="input-base" id="searchInput" placeholder="搜索对象名..." oninput="filterList()">
+      <div id="objectList" style="max-height: calc(100% - 40px); overflow-y: auto;"></div>
+      
+      <div class="brute-section">
+        <div class="brute-title">🔥 方法爆破</div>
+        <select class="input-base" id="bruteTarget"><option value="">选择目标...</option></select>
+        <button class="btn danger" style="width:100%" id="btnBrute" onclick="startBrute()">开始撞库</button>
+        <div class="brute-progress" id="bruteProgress">选择对象后开始爆破</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中间：对象树 -->
+  <div class="panel" style="flex: 1;">
+    <div class="panel-title">
+      <span>🌳 对象结构</span>
+      <div>
+        <button class="btn" style="padding:2px 8px" onclick="expandAll()">展开</button>
+        <button class="btn" style="padding:2px 8px" onclick="collapseAll()">折叠</button>
+      </div>
+    </div>
+    <div class="panel-content" id="treeContainer">
+      <div class="empty">👈 选择左侧对象查看结构</div>
+    </div>
+  </div>
+
+  <!-- 右侧：终端 -->
+  <div class="panel" style="width: 320px; flex-shrink: 0;">
+    <div class="panel-title">
+      <span>📡 终端</span>
+      <label style="font-size:0.8em"><input type="checkbox" id="enableHook" onchange="toggleHook()"> Hook</label>
+    </div>
+    <div class="panel-content" style="display:flex; flex-direction: column;">
+      <div class="terminal" id="terminal"></div>
+      
+      <input type="text" class="input-base" id="execPath" placeholder="路径: window.obj.method" style="color:var(--green)">
+      <input type="text" class="input-base" id="execParams" placeholder='参数: {"key":"val"} 或 "text"'>
+      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <button class="btn primary" style="flex:1" onclick="executeCall()">⚡ 调用</button>
+        <button class="btn warn" style="flex:1" onclick="runFuzz()">🧪 Fuzz</button>
+      </div>
+      
+      <div class="brute-section" style="margin-top: 8px; background: transparent; border-color: var(--blue);">
+        <div style="color:var(--blue); font-size:0.85em; margin-bottom:6px; font-weight:bold;">🔗 Deeplink</div>
+        <input type="text" class="input-base" id="deeplinkUrl" placeholder="jsbridge://action">
+        <button class="btn" style="width:100%" onclick="testDeeplink()">发送</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- 中间：浏览树 -->
-<div class="panel">
-<div class="panel-header"><div class="panel-title" id="treeTitle">对象树浏览</div></div>
-<div class="panel-body" id="treeBody">
-<div class="empty">选择左侧对象查看浏览树</div>
-</div>
-</div>
-
-<!-- 右侧：调用器 -->
-<div class="panel">
-<div class="panel-header"><div class="panel-title">📡 接口调用器</div></div>
-<div class="panel-body">
-<div class="call-section">
-<div class="call-label">裸对象路径</div>
-<div class="call-path" id="callPath">-</div>
-</div>
-<div class="call-section">
-<div class="call-label">方法名</div>
-<input type="text" class="call-input" id="methodName" placeholder="如: getUserInfo">
-</div>
-<div class="call-section">
-<div class="call-label">调用模式</div>
-<select class="call-input" id="callMode" onchange="changeCallMode()">
-<option value="manual">手工参数</option>
-<option value="string">string: 直接传字符串</option>
-<option value="json">json_string: 传JSON字符串</option>
-<option value="multi">multi: 多参数数组</option>
-</select>
-</div>
-<div class="call-section">
-<div class="call-label">参数内容</div>
-<input type="text" class="call-input" id="paramInput" placeholder="如: test 或 {&quot;a&quot;:1}">
-<div style="font-size:0.7em;color:var(--text-dim);margin-top:4px;" id="paramHint">直接输入参数值</div>
-</div>
-<div class="call-section">
-<label><input type="checkbox" id="useCallback"> 支持callback</label>
-</div>
-<button class="btn primary" style="width:100%;margin-top:8px;" onclick="doExecute()">⚡ 执行</button>
-<div class="call-result" id="callResult"></div>
-
-<div class="deeplink-section">
-<div class="deeplink-title">🔗 URL Scheme / Deeplink 测试</div>
-<input type="text" class="call-input" id="deeplinkUrl" placeholder="如: jsbridge://getUserInfo?{}">
-<button class="btn" style="width:100%;margin-top:6px;" onclick="testDeeplink()">执行 Deeplink</button>
-<div class="call-result" id="deeplinkResult"></div>
-</div>
-</div>
-</div>
+<!-- 报告弹窗 -->
+<div class="modal" id="reportModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="color:var(--blue)">📄 渗透测试报告</h3>
+      <div>
+        <button class="btn primary" onclick="copyReport()">复制</button>
+        <button class="btn" onclick="document.getElementById('reportModal').style.display='none'">关闭</button>
+      </div>
+    </div>
+    <div class="modal-body" id="reportBody"></div>
+  </div>
 </div>
 
 <script>
 (function() {
-// ===================== 方法名字典 =====================
-const METHOD_DICT = [
-// 通用方法
-"init", "open", "close", "start", "stop", "pause", "resume", "destroy",
-"get", "set", "put", "remove", "clear", "has", "contains", "size",
-"load", "save", "read", "write", "delete", "update", "insert", "query",
-"show", "hide", "display", "render", "refresh", "reload", "update",
-"send", "receive", "post", "fetch", "request", "response", "callback",
-"on", "off", "emit", "trigger", "bind", "unbind", "addEventListener", "removeEventListener",
-
-// 用户/设备相关
-"getUserInfo", "getDeviceInfo", "getUserId", "getUserName", "getUserAvatar",
-"getDeviceId", "getDeviceName", "getImei", "getImsi", "getMac", "getIp",
-"getLocation", "getPosition", "getGps", "getLatitude", "getLongitude",
-"getVersion", "getVersionName", "getVersionCode", "getAppVersion",
-"getPlatform", "getOs", "getOsVersion", "getModel", "getBrand",
-"getToken", "getAccessToken", "getRefreshToken", "getSessionId",
-
-// 支付/钱包
-"pay", "alipay", "wxpay", "unionpay", "paypal", "stripe",
-"getBalance", "recharge", "withdraw", "transfer", "refund",
-"createOrder", "queryOrder", "cancelOrder", "payOrder",
-
-// 登录/认证
-"login", "logout", "signin", "signup", "register", "unregister",
-"wxLogin", "qqLogin", "weiboLogin", "appleLogin", "googleLogin", "facebookLogin",
-"oauth", "auth", "authorize", "authenticate",
-"isLogin", "isLogged", "checkLogin", "checkAuth",
-
-// 分享/社交
-"share", "shareTo", "shareToWechat", "shareToWeibo", "shareToQQ",
-"shareImage", "shareText", "shareWeb", "shareVideo",
-
-// 相机/相册/文件
-"takePhoto", "takePicture", "capturePhoto", "captureImage",
-"chooseImage", "choosePhoto", "chooseVideo", "chooseFile",
-"upload", "uploadFile", "uploadImage", "uploadVideo",
-"download", "downloadFile", "downloadImage",
-"saveImage", "saveVideo", "saveToAlbum", "saveToGallery",
-
-// 扫码
-"scanQRCode", "scanQr", "scanCode", "scanBarcode", "goScanQRCode",
-
-// 键盘/输入
-"showKeyboard", "hideKeyboard", "showInput", "hideInput",
-"getInput", "setInput", "clearInput",
-
-// 状态栏/导航
-"setStatusBar", "setStatusBarColor", "setStatusBarStyle",
-"setNavigationBar", "setNavigationBarColor", "setNavigationBarHidden",
-"setTitle", "getTitle", "setSubTitle",
-"goBack", "goForward", "goHome", "goTo", "jumpTo", "jumpToOtherApp",
-"openBrowser", "openUrl", "openWebview", "openActivity",
-
-// 通知/消息
-"showToast", "showAlert", "showConfirm", "showDialog", "showModal",
-"showNotification", "showPush", "sendPush",
-"showLoading", "hideLoading", "showProgress", "hideProgress",
-
-// 存储
-"setStorage", "getStorage", "removeStorage", "clearStorage",
-"setCookie", "getCookie", "removeCookie", "clearCookie",
-"setLocalStorage", "getLocalStorage", "removeLocalStorage", "clearLocalStorage",
-"setSessionStorage", "getSessionStorage", "removeSessionStorage", "clearSessionStorage",
-
-// 剪贴板
-"copy", "paste", "setClipboard", "getClipboard", "copyToClipboard", "pasteFromClipboard",
-
-// 联系人
-"getContacts", "getContact", "getAddressBook", "pickContact",
-
-// 电话/短信
-"call", "dial", "makeCall", "makePhoneCall",
-"sendSms", "sendSms", "sendTextMessage",
-
-// 音频/视频
-"play", "pause", "stop", "seek", "volume",
-"playAudio", "pauseAudio", "stopAudio", "playVideo", "pauseVideo", "stopVideo",
-"record", "startRecord", "stopRecord", "recordAudio", "recordVideo",
-
-// 蓝牙/NFC
-"startBluetooth", "stopBluetooth", "scanBluetooth", "connectBluetooth",
-"startNfc", "stopNfc", "scanNfc", "readNfc", "writeNfc",
-
-// 其他常用
-"invoke", "execute", "call", "callNative", "callHandler",
-"postMessage", "sendMessage", "dispatchEvent",
-"addEventListener", "removeEventListener", "onMessage", "offMessage",
-"ready", "init", "destroy", "dispose", "finalize"
-];
-
-// ===================== 风险评估知识库 =====================
-const RISK_KW = {
-high: ["exec","eval","shell","cmd","execute","invoke","runtime","system","install","uninstall","jumpTo","startActivity","openapp","loginauth","wxlogin","oauth","signin","token","contact","addressbook","readfile","writefile","deletefile","openurl","loadurl","intent","pay","alipay","wxpay","wallet"],
-medium: ["location","getlocation","geolocation","gps","device","deviceid","imei","getdeviceinfo","softwaretype","userinfo","getuser","account","put","get","storage","sign","cmbsign"],
-low: ["camera","photo","takephoto","share","goshare","scan","qrcode","goscancode","keyboard","showkeyboard","hidekeyboard","statusbar","webheight","screen","policy","toast","alert","push","notification"]
-};
-
-function getRisk(name) {
-var s = name.toLowerCase();
-for (var r in RISK_KW) for (var k of RISK_KW[r]) if (s.indexOf(k) !== -1) return r;
-return "pending";
-}
-
-// ===================== 基线检测 =====================
-var baseline = [];
-function getBaseline() {
-try {
-var ifr = document.createElement("iframe");
-ifr.style.display = "none";
-ifr.src = "about:blank";
-document.body.appendChild(ifr);
-baseline = Object.keys(ifr.contentWindow);
-document.body.removeChild(ifr);
-} catch(e) {
-baseline = ["window","self","document","location","navigator","history","localStorage","sessionStorage","fetch","setTimeout","setInterval","clearTimeout","clearInterval","console","JSON","Object","Array","String","Number","Boolean","Function","Date","Error","Math","RegExp","Promise","Symbol","Map","Set","WeakMap","WeakSet","Proxy","Reflect","JSON","Intl","WebAssembly"];
-}
-}
-function isBaseline(k) { return baseline.indexOf(k) !== -1; }
-
-// ===================== 扫描 =====================
-var objects = [];
-var funcCount = 0;
-
-function scan() {
-objects = [];
-funcCount = 0;
-getBaseline();
-
-var ignore = ["toggleTheme","rescan","expandTreeAll","collapseTreeAll","exportData","filterList","selectObj","doExecute","changeCallMode","testDeeplink","getBaseline","scan","getRisk","isBaseline","countProps","renderList","renderTree","doCall","countNonBaseline","countFunctions","startBrute","stopBrute","updateBruteSelect","bruteWorker","foundMethods"];
-
-for (var k in window) {
-if (ignore.indexOf(k) !== -1) continue;
-try {
-var v = window[k];
-var t = typeof v;
-if (t !== "object" && t !== "function") continue;
-var isBase = isBaseline(k);
-var risk = isBase ? "baseline" : getRisk(k);
-objects.push({ name: k, type: t, baseline: isBase, risk: risk, val: v });
-
-// 统计函数
-if (t === "function") funcCount++;
-if (t === "object" && v) {
-for (var m in v) {
-try { if (typeof v[m] === "function") funcCount++; } catch(e) {}
-}
-}
-} catch(e) {}
-}
-
-// 排序
-var order = { high: 0, medium: 1, low: 2, pending: 3, baseline: 4 };
-objects.sort(function(a, b) {
-if (a.baseline !== b.baseline) return a.baseline ? 1 : -1;
-return order[a.risk] - order[b.risk];
-});
-
-renderList();
-updateBruteSelect();
-}
-
-function renderList() {
-var q = (document.getElementById("searchObj").value || "").toLowerCase();
-var h = "";
-for (var i = 0; i < objects.length; i++) {
-var o = objects[i];
-if (q && o.name.toLowerCase().indexOf(q) === -1) continue;
-h += '<div class="object-item' + (o.baseline ? '' : ' active') + '" onclick="selectObj(' + i + ')">';
-h += '<span class="obj-name">' + o.name + '</span>';
-h += '<span class="obj-type">' + o.type + '</span>';
-if (o.baseline) {
-h += '<span class="obj-tag tag-baseline">基线内:true</span>';
+// 等待DOM加载
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
 } else {
-h += '<span class="obj-tag tag-risk-' + o.risk + '">' + o.risk + '</span>';
-h += '<span class="obj-tag tag-baseline">基线内:false</span>';
-}
-h += '</div>';
-}
-document.getElementById("objList").innerHTML = h || '<div class="empty">无匹配对象</div>';
-document.getElementById("countNonBaseline").textContent = objects.filter(function(o) { return !o.baseline; }).length;
-document.getElementById("countFunctions").textContent = funcCount;
+  init();
 }
 
-window.filterList = function() { renderList(); };
-window.rescan = function() { scan(); };
+function init() {
+  // 工具方法屏蔽
+  const WVS_GLOBALS = ['runScan', 'startBrute', 'stopBrute', 'executeCall', 'runFuzz', 'testDeeplink', 'exportReport', 'copyReport', 'toggleHook', 'expandAll', 'collapseAll', 'filterList'];
+  
+  // 知识库
+  const KNOWLEDGE = {
+    exec: { cat: '命令执行', kw: ['exec', 'eval', 'shell', 'cmd', 'invoke', 'runtime', 'system'], risk: 'r-crit', desc: '可能执行系统命令' },
+    app: { cat: '应用控制', kw: ['install', 'uninstall', 'downloadapk', 'openapp', 'startactivity'], risk: 'r-crit', desc: '静默安装或拉起应用' },
+    pay: { cat: '支付越权', kw: ['pay', 'alipay', 'wxpay', 'wallet', 'createorder'], risk: 'r-crit', desc: '未授权拉起支付' },
+    contact: { cat: '隐私窃取', kw: ['contact', 'addressbook', 'getcontacts'], risk: 'r-high', desc: '获取通讯录数据' },
+    file: { cat: '文件操作', kw: ['readfile', 'writefile', 'openfile', 'deletefile'], risk: 'r-high', desc: '读写App私有文件' },
+    auth: { cat: '认证劫持', kw: ['login', 'oauth', 'token', 'signin', 'gettoken'], risk: 'r-high', desc: '获取登录凭证' },
+    intent: { cat: '路由跳转', kw: ['intent', 'openurl', 'jumpto', 'loadurl'], risk: 'r-high', desc: '越权拉起组件' },
+    device: { cat: '设备指纹', kw: ['deviceid', 'imei', 'mac', 'serial', 'getdevice'], risk: 'r-med', desc: '获取设备标识' },
+    storage: { cat: '数据存储', kw: ['storage', 'setdata', 'getdata', 'save', 'load'], risk: 'r-med', desc: '操作本地存储' },
+    location: { cat: '位置信息', kw: ['location', 'gps', 'position', 'getlocation'], risk: 'r-med', desc: '获取物理坐标' },
+    media: { cat: '媒体调用', kw: ['camera', 'photo', 'audio', 'record', 'scan'], risk: 'r-low', desc: '调用摄像头麦克风' },
+    ui: { cat: '界面交互', kw: ['toast', 'alert', 'navigation', 'statusbar', 'keyboard'], risk: 'r-low', desc: 'UI展示操作' }
+  };
 
-// ===================== 选择对象，显示树 =====================
-var currentObj = null;
-window.selectObj = function(idx) {
-currentObj = objects[idx];
-document.getElementById("treeTitle").textContent = "对象树浏览 - " + currentObj.name;
-document.getElementById("callPath").textContent = "window." + currentObj.name;
-document.getElementById("methodName").value = "";
-document.getElementById("callResult").className = "call-result";
+  // 爆破字典
+  const BRUTE_DICT = [
+    'getUserInfo', 'getDeviceInfo', 'getToken', 'getAccessToken', 'login', 'logout',
+    'pay', 'alipay', 'wxpay', 'getLocation', 'getContacts', 'getClipboard',
+    'openUrl', 'startActivity', 'jumpTo', 'invoke', 'execute', 'call',
+    'postMessage', 'sendMessage', 'upload', 'download', 'saveImage',
+    'takePhoto', 'scanQRCode', 'showKeyboard', 'hideKeyboard',
+    'setStorage', 'getStorage', 'share', 'shareToWechat', 'getImei',
+    'getMacAddress', 'readFile', 'writeFile', 'getSimInfo'
+  ];
 
-renderTree(currentObj.val, "window." + currentObj.name);
-};
+  // 全局状态
+  let scanData = [];
+  let hookEnabled = false;
+  let selectedObj = null;
+  const terminal = document.getElementById('terminal');
 
-function renderTree(obj, path) {
-var h = "";
-var items = [];
+  // 日志
+  function log(msg, type = 'info') {
+    const time = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'log-line log-' + type;
+    line.innerHTML = '<span class="log-time">[' + time + ']</span> ' + msg;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+    if (terminal.children.length > 100) terminal.removeChild(terminal.firstChild);
+  }
 
-if (obj === null || obj === undefined) {
-h = '<div class="tree-item"><span class="tree-key">' + path.split(".").pop() + '</span><span class="tree-type">null</span></div>';
-} else if (typeof obj === "function") {
-h = renderTreeNode(obj, path, "function");
-} else if (typeof obj === "object") {
-h = renderTreeNode(obj, path, "object");
-} else {
-h = '<div class="tree-item"><span class="tree-key">' + path.split(".").pop() + '</span><span class="tree-type">' + typeof obj + '</span><span class="tree-val">' + String(obj) + '</span></div>';
+  // 安全字符串化
+  function safeStr(obj) {
+    try { return typeof obj === 'object' ? JSON.stringify(obj) : String(obj); }
+    catch(e) { return '[Native Object]'; }
+  }
+
+  // 风险评估
+  function evalRisk(name) {
+    const s = name.toLowerCase();
+    for (let k in KNOWLEDGE) {
+      if (KNOWLEDGE[k].kw.some(kw => s.includes(kw))) return KNOWLEDGE[k];
+    }
+    return { cat: '未分类', risk: 'r-none', desc: '需人工确认' };
+  }
+
+  // iframe 白名单提取
+  function getInjectedKeys() {
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      const cleanKeys = Object.getOwnPropertyNames(iframe.contentWindow);
+      const currKeys = Object.getOwnPropertyNames(window);
+      iframe.parentNode.removeChild(iframe);
+      return currKeys.filter(k =>
+        !cleanKeys.includes(k) &&
+        !k.startsWith('webkit') &&
+        !k.startsWith('on') &&
+        !WVS_GLOBALS.includes(k)
+      );
+    } catch(e) {
+      // 降级方案
+      const blacklist = ['window','document','location','navigator','localStorage','sessionStorage','console','fetch','XMLHttpRequest','setTimeout','setInterval','clearTimeout','clearInterval','JSON','Object','Array','String','Number','Boolean','Function','Symbol','Map','Set','WeakMap','WeakSet','Promise','Proxy','Reflect','Error','Date','RegExp','Math','parseInt','parseFloat','isNaN','isFinite','encodeURI','decodeURI','encodeURIComponent','decodeURIComponent','escape','unescape','eval','uneval','Infinity','NaN','undefined','NaN','alert','confirm','prompt','print','scroll','scrollBy','scrollTo','getSelection','getComputedStyle','matchMedia'];
+      return Object.getOwnPropertyNames(window).filter(k => !blacklist.includes(k) && !WVS_GLOBALS.includes(k));
+    }
+  }
+
+  // 扫描
+  window.runScan = function() {
+    log('开始扫描注入对象...', 'warn');
+    scanData = [];
+    const keys = getInjectedKeys();
+    
+    let stats = { total: 0, high: 0, med: 0 };
+    
+    keys.forEach(key => {
+      let obj;
+      try { obj = window[key]; } catch(e) { return; }
+      
+      const type = typeof obj;
+      if (type !== 'object' && type !== 'function') return;
+      
+      let methods = [];
+      let maxRisk = 'r-none';
+      const objInfo = evalRisk(key);
+      
+      if (obj) {
+        try {
+          let props = Object.getOwnPropertyNames(obj);
+          // 检查原型链
+          const proto = Object.getPrototypeOf(obj);
+          if (proto && proto !== Object.prototype && proto !== Function.prototype) {
+            props = [...new Set([...props, ...Object.getOwnPropertyNames(proto)])];
+          }
+          
+          props.forEach(p => {
+            if (['apply','bind','call','toString','length','name','prototype','constructor','caller','callee'].includes(p)) return;
+            let mType;
+            try { mType = typeof obj[p]; } catch(e) { mType = 'unknown'; }
+            
+            const mInfo = evalRisk(p);
+            const levels = { 'r-crit': 4, 'r-high': 3, 'r-med': 2, 'r-low': 1, 'r-none': 0 };
+            if (levels[mInfo.risk] > levels[maxRisk]) maxRisk = mInfo.risk;
+            
+            methods.push({ name: p, type: mType, info: mInfo });
+          });
+        } catch(e) {}
+      }
+      
+      stats.total++;
+      if (['r-crit', 'r-high'].includes(maxRisk)) stats.high++;
+      if (maxRisk === 'r-med') stats.med++;
+      
+      scanData.push({ name: key, type: type, info: objInfo, maxRisk: maxRisk, methods: methods, val: obj });
+    });
+    
+    // 排序
+    scanData.sort((a, b) => {
+      const levels = { 'r-crit': 0, 'r-high': 1, 'r-med': 2, 'r-low': 3, 'r-none': 4 };
+      return levels[a.maxRisk] - levels[b.maxRisk];
+    });
+    
+    document.getElementById('statHigh').textContent = stats.high;
+    document.getElementById('statMed').textContent = stats.med;
+    
+    detectBridge();
+    renderList();
+    log('扫描完成: 发现 ' + stats.total + 个对象', 'info');
+  };
+
+  // Bridge检测
+  function detectBridge() {
+    let type = 'unknown';
+    let info = '';
+    
+    if (window.webkit && window.webkit.messageHandlers) {
+      type = 'ios';
+      info = 'WKWebView';
+    } else if (window.JsBridge || window.JSBridge) {
+      type = 'thirdparty';
+      info = 'JsBridge';
+    } else if (window.WebViewJavascriptBridge) {
+      type = 'thirdparty';
+      info = 'WebViewJavascriptBridge';
+    } else if (window.cordova) {
+      type = 'thirdparty';
+      info = 'Cordova';
+    } else if (window.ReactNativeWebView) {
+      type = 'thirdparty';
+      info = 'ReactNative';
+    }
+    
+    if (type === 'unknown') {
+      for (let i = 0; i < scanData.length; i++) {
+        const n = scanData[i].name.toLowerCase();
+        if (n.includes('android') || n.includes('java') || n.includes('jsi')) {
+          type = 'android';
+          info = 'addJavascriptInterface';
+          break;
+        }
+      }
+    }
+    
+    const badge = document.getElementById('bridgeBadge');
+    badge.textContent = info || type;
+    badge.className = 'bridge-badge ' + type;
+  }
+
+  // 渲染列表
+  function renderList() {
+    const q = (document.getElementById('searchInput').value || '').toLowerCase();
+    const container = document.getElementById('objectList');
+    const sel = document.getElementById('bruteTarget');
+    container.innerHTML = '';
+    sel.innerHTML = '<option value="">选择目标...</option>';
+    
+    scanData.forEach((item, idx) => {
+      if (q && !item.name.toLowerCase().includes(q)) return;
+      
+      sel.innerHTML += '<option value="' + item.name + '">' + item.name + '</option>';
+      
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.innerHTML = 
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<span style="font-weight:bold;color:var(--blue)">.' + item.name + '</span>' +
+          '<span class="risk-tag ' + item.maxRisk + '">' + item.info.cat + '</span>' +
+        '</div>' +
+        '<div style="font-size:0.75em;color:var(--text-dim);margin-top:3px">方法: ' + item.methods.length + ' | ' + item.type + '</div>';
+      div.onclick = () => selectObject(idx);
+      container.appendChild(div);
+    });
+    
+    if (container.children.length === 0) {
+      container.innerHTML = '<div class="empty">无匹配对象</div>';
+    }
+  }
+  window.filterList = renderList;
+
+  // 选择对象
+  function selectObject(idx) {
+    selectedObj = scanData[idx];
+    
+    document.querySelectorAll('.list-item').forEach(el => el.classList.remove('active'));
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    
+    const container = document.getElementById('treeContainer');
+    
+    if (selectedObj.methods.length === 0) {
+      container.innerHTML = '<div class="empty">⚠️ 此对象无暴露方法<br><br>建议使用左侧<strong>方法爆破</strong>探测隐藏接口</div>';
+    } else {
+      renderTree(selectedObj, container);
+    }
+    
+    document.getElementById('execPath').value = 'window.' + selectedObj.name;
+    log('选中: window.' + selectedObj.name, 'info');
+  }
+
+  // 渲染树（循环引用保护）
+  function renderTree(obj, container, visited) {
+    if (!visited) visited = new WeakSet();
+    
+    let html = '<div style="color:var(--orange);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">window.' + obj.name + ' <span style="font-size:0.7em;color:var(--text-dim)">[' + obj.type + ']</span></div>';
+    
+    obj.methods.forEach(m => {
+      const realName = m.name.replace(/ \[.*\]/g, '');
+      html += 
+        '<div class="tree-node">' +
+          '<div class="tree-header">' +
+            '<span class="tree-key function">.' + m.name + '</span>' +
+            '<span class="tree-type">' + m.type + '</span>' +
+            (m.info.risk !== 'r-none' && m.info.risk !== 'r-low' ? '<span class="risk-tag ' + m.info.risk + '">' + m.info.cat + '</span>' : '') +
+            '<button class="action-btn" onclick="loadToExec(\'window.' + obj.name + '.' + realName + '\')">装载</button>' +
+          '</div>' +
+        '</div>';
+    });
+    
+    container.innerHTML = html;
+  }
+  window.loadToExec = function(path) {
+    document.getElementById('execPath').value = path;
+    log('装载: ' + path, 'info');
+  };
+
+  window.expandAll = function() {
+    document.querySelectorAll('.tree-children').forEach(c => c.classList.add('show'));
+  };
+  window.collapseAll = function() {
+    document.querySelectorAll('.tree-children').forEach(c => c.classList.remove('show'));
+  };
+
+  // 爆破
+  window.startBrute = function() {
+    const targetName = document.getElementById('bruteTarget').value;
+    if (!targetName) { log('请先选择目标对象', 'err'); return; }
+    
+    let targetObj;
+    try { targetObj = window[targetName]; } catch(e) { return; }
+    
+    const btn = document.getElementById('btnBrute');
+    const prog = document.getElementById('bruteProgress');
+    btn.disabled = true;
+    
+    let idx = 0, found = 0;
+    const scanItem = scanData.find(i => i.name === targetName);
+    if (!scanItem) return;
+    
+    log('💀 开始爆破 window.' + targetName + '...', 'warn');
+    
+    function step() {
+      if (idx >= BRUTE_DICT.length) {
+        btn.disabled = false;
+        prog.textContent = '完成! 发现 ' + found + ' 个隐藏方法';
+        log('爆破完成: +' + found + ' 个方法', 'info');
+        if (selectedObj && selectedObj.name === targetName) selectObject(scanData.indexOf(scanItem));
+        return;
+      }
+      
+      const method = BRUTE_DICT[idx];
+      prog.textContent = '探测: ' + method + ' (' + (idx+1) + '/' + BRUTE_DICT.length + ')';
+      
+      try {
+        // 使用 in 避免触发 getter
+        if (method in targetObj && !scanItem.methods.some(m => m.name.includes(method))) {
+          found++;
+          scanItem.methods.push({ name: method + ' [爆破]', type: typeof targetObj[method], info: evalRisk(method) });
+          log('🎯 发现: .' + method + '()', 'hook');
+        }
+      } catch(e) {}
+      
+      idx++;
+      setTimeout(step, 5);
+    }
+    step();
+  };
+
+  // 执行调用
+  window.executeCall = function() {
+    const path = document.getElementById('execPath').value.replace('window.', '');
+    const params = document.getElementById('execParams').value;
+    
+    if (!path) { log('请输入路径', 'err'); return; }
+    log('> ' + path + '(' + (params || '') + ')', 'info');
+    
+    try {
+      let target = window, parent = null;
+      path.split('.').forEach(p => { parent = target; target = target[p]; });
+      
+      if (typeof target === 'function') {
+        let args = [];
+        if (params) {
+          try { args = [JSON.parse(params)]; } catch(e) { args = [params]; }
+        }
+        const res = target.apply(parent, args);
+        log('< ' + (res !== undefined ? safeStr(res) : 'undefined'), 'info');
+      } else {
+        log('< ' + safeStr(target), 'info');
+      }
+    } catch(e) {
+      log('! 错误: ' + e.message, 'err');
+    }
+  };
+
+  // Fuzz
+  window.runFuzz = function() {
+    const path = document.getElementById('execPath').value.replace('window.', '');
+    if (!path) { log('请先选择方法', 'err'); return; }
+    
+    const fuzzParams = ['', 'test', '123', '{}', '[]', 'null', '{"a":1}', '["x","y"]'];
+    log('🧪 Fuzz测试: ' + path, 'warn');
+    
+    try {
+      let target = window, parent = null;
+      path.split('.').forEach(p => { parent = target; target = target[p]; });
+      
+      if (typeof target !== 'function') { log('目标不是函数', 'err'); return; }
+      
+      fuzzParams.forEach((p, i) => {
+        try {
+          let args = [];
+          if (p) {
+            if (p === 'null') args = [null];
+            else try { args = [JSON.parse(p)]; } catch(e) { args = [p]; }
+          }
+          const res = target.apply(parent, args);
+          log('✅ ' + (p || '(empty)') + ' → ' + (res !== undefined ? safeStr(res).substring(0,50) : 'void'), 'info');
+        } catch(e) {
+          log('❌ ' + (p || '(empty)') + ' → ' + e.message, 'err');
+        }
+      });
+    } catch(e) {
+      log('错误: ' + e.message, 'err');
+    }
+  };
+
+  // Deeplink
+  window.testDeeplink = function() {
+    let url = document.getElementById('deeplinkUrl').value.trim();
+    if (!url) { log('请输入Deeplink', 'err'); return; }
+    if (!url.includes('://')) { log('无效的URL格式', 'err'); return; }
+    
+    log('> Deeplink: ' + url, 'warn');
+    
+    const cbName = '_dlcb_' + Date.now();
+    window[cbName] = function(res) {
+      log('🔥 回调: ' + safeStr(res), 'hook');
+      delete window[cbName];
+    };
+    
+    const finalUrl = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = finalUrl;
+    document.body.appendChild(iframe);
+    setTimeout(() => { try { iframe.parentNode.removeChild(iframe); } catch(e) {} }, 3000);
+    
+    setTimeout(() => {
+      if (window[cbName]) {
+        log('⏱️ 超时(5秒)', 'err');
+        delete window[cbName];
+      }
+    }, 5000);
+  };
+
+  // Hook
+  window.toggleHook = function() {
+    hookEnabled = document.getElementById('enableHook').checked;
+    if (!hookEnabled) { log('Hook已禁用', 'info'); return; }
+    
+    let count = 0;
+    scanData.forEach(objData => {
+      let target;
+      try { target = window[objData.name]; } catch(e) { return; }
+      
+      if (typeof target === 'object' && target !== null) {
+        objData.methods.forEach(m => {
+          const realName = m.name.replace(/ \[.*\]/g, '');
+          if (typeof target[realName] === 'function' && !target[realName].__hooked) {
+            try {
+              const original = target[realName];
+              target[realName] = function() {
+                if (hookEnabled) {
+                  log('[Hook] ' + objData.name + '.' + realName + '(' + Array.from(arguments).map(safeStr).join(', ') + ')', 'hook');
+                }
+                return original.apply(this, arguments);
+              };
+              target[realName].__hooked = true;
+              count++;
+            } catch(e) {}
+          }
+        });
+      }
+    });
+    
+    log('Hook已启用: ' + count + ' 个方法被代理', 'info');
+  };
+
+  // 导出报告
+  window.exportReport = function() {
+    let md = '# JSBridge 安全扫描报告\n\n';
+    md += '> **扫描时间:** ' + new Date().toLocaleString() + '\n';
+    md += '> **目标页面:** `' + location.href + '`\n';
+    md += '> **User-Agent:** `' + navigator.userAgent + '`\n\n';
+    
+    let crit = 0, high = 0, med = 0, low = 0;
+    scanData.forEach(obj => {
+      obj.methods.forEach(m => {
+        if (m.info.risk === 'r-crit') crit++;
+        else if (m.info.risk === 'r-high') high++;
+        else if (m.info.risk === 'r-med') med++;
+        else low++;
+      });
+    });
+    
+    md += '## 风险统计\n';
+    md += '- **严重:** ' + crit + '\n';
+    md += '- **高危:** ' + high + '\n';
+    md += '- **中危:** ' + med + '\n';
+    md += '- **低危/未知:** ' + low + '\n\n';
+    
+    md += '## 高危接口\n';
+    scanData.forEach(obj => {
+      obj.methods.forEach(m => {
+        if (m.info.risk === 'r-crit' || m.info.risk === 'r-high') {
+          const realName = m.name.replace(/ \[.*\]/g, '');
+          md += '\n### [' + (m.info.risk === 'r-crit' ? 'CRITICAL' : 'HIGH') + '] ' + m.info.cat + '\n';
+          md += '> ' + m.info.desc + '\n\n';
+          md += '```javascript\nwindow.' + obj.name + '.' + realName + '()\n```\n';
+        }
+      });
+    });
+    
+    md += '\n## 所有接口\n';
+    scanData.forEach(obj => {
+      md += '\n### window.' + obj.name + '\n';
+      md += '- **分类:** ' + obj.info.cat + '\n';
+      if (obj.methods.length > 0) {
+        md += '- **方法:**\n';
+        obj.methods.forEach(m => {
+          md += '  - `.' + m.name + '` ' + (m.info.risk !== 'r-none' && m.info.risk !== 'r-low' ? '⚠️ **' + m.info.cat + '**' : '') + '\n';
+        });
+      }
+    });
+    
+    document.getElementById('reportBody').textContent = md;
+    document.getElementById('reportModal').style.display = 'flex';
+  };
+
+  window.copyReport = function() {
+    const text = document.getElementById('reportBody').textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        log('报告已复制', 'info');
+        document.getElementById('reportModal').style.display = 'none';
+      });
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      log('报告已复制', 'info');
+      document.getElementById('reportModal').style.display = 'none';
+    }
+  };
+
+  // 初始化
+  document.getElementById('envInfo').textContent = navigator.userAgent.split(')')[0] + ')';
+  log('Scanner 初始化完成', 'info');
+  runScan();
 }
-
-document.getElementById("treeBody").innerHTML = h;
-}
-
-function renderTreeNode(obj, path, nodeType) {
-var name = path.split(".").pop();
-var h = '<div class="tree-item">';
-h += '<span class="tree-toggle" onclick="toggleTree(this)">▶</span>';
-h += '<span class="tree-key ' + nodeType + '" onclick="setPath(\'' + path + '\')">' + name + '</span>';
-h += '<span class="tree-type">' + nodeType + '</span>';
-h += '</div>';
-h += '<div class="tree-children">';
-
-try {
-var keys = Object.keys(obj);
-for (var i = 0; i < keys.length && i < 100; i++) {
-var k = keys[i];
-if (["caller","callee","arguments"].indexOf(k) !== -1) continue;
-try {
-var v = obj[k];
-var t = typeof v;
-var childPath = path + "." + k;
-
-if (v === null || v === undefined) {
-h += '<div class="tree-item" style="margin-left:16px;">';
-h += '<span class="tree-key" onclick="setPath(\'' + childPath + '\')">' + k + '</span>';
-h += '<span class="tree-type">' + (v === null ? "null" : "undefined") + '</span>';
-h += '</div>';
-} else if (t === "function") {
-h += renderTreeNode(v, childPath, "function");
-} else if (t === "object") {
-h += renderTreeNode(v, childPath, "object");
-} else {
-var displayVal = t === "string" ? '"' + String(v).substring(0, 30) + '"' : String(v);
-h += '<div class="tree-item" style="margin-left:16px;">';
-h += '<span class="tree-key ' + t + '" onclick="setPath(\'' + childPath + '\')">' + k + '</span>';
-h += '<span class="tree-type">' + t + '</span>';
-h += '<span class="tree-val">' + displayVal + '</span>';
-h += '</div>';
-}
-} catch(e) {}
-}
-} catch(e) {}
-
-h += '</div>';
-return h;
-}
-
-window.toggleTree = function(el) {
-var children = el.parentNode.nextElementSibling;
-if (children) {
-children.classList.toggle("show");
-el.textContent = children.classList.contains("show") ? "▼" : "▶";
-}
-};
-
-window.expandTreeAll = function() {
-document.querySelectorAll(".tree-children").forEach(function(c) { c.classList.add("show"); });
-document.querySelectorAll(".tree-toggle").forEach(function(t) { t.textContent = "▼"; });
-};
-
-window.collapseTreeAll = function() {
-document.querySelectorAll(".tree-children").forEach(function(c) { c.classList.remove("show"); });
-document.querySelectorAll(".tree-toggle").forEach(function(t) { t.textContent = "▶"; });
-};
-
-window.setPath = function(path) {
-document.getElementById("callPath").textContent = path;
-var parts = path.split(".");
-document.getElementById("methodName").value = parts[parts.length - 1];
-};
-
-// ===================== 方法名字典爆破 =====================
-var bruteRunning = false;
-var bruteTimer = null;
-var foundMethods = [];
-
-window.updateBruteSelect = function() {
-var sel = document.getElementById("bruteTarget");
-sel.innerHTML = '<option value="">选择对象...</option>';
-for (var i = 0; i < objects.length; i++) {
-if (!objects[i].baseline && objects[i].type === "object") {
-sel.innerHTML += '<option value="' + objects[i].name + '">' + objects[i].name + '</option>';
-}
-}
-};
-
-window.startBrute = function() {
-var targetName = document.getElementById("bruteTarget").value;
-if (!targetName) {
-alert("请先选择一个对象");
-return;
-}
-
-var targetObj = window[targetName];
-if (!targetObj) {
-alert("对象不存在: " + targetName);
-return;
-}
-
-bruteRunning = true;
-foundMethods = [];
-document.getElementById("bruteBtn").disabled = true;
-document.getElementById("bruteProgress").textContent = "正在爆破... 0/" + METHOD_DICT.length;
-document.getElementById("bruteResults").innerHTML = "";
-
-var idx = 0;
-function bruteWorker() {
-if (!bruteRunning || idx >= METHOD_DICT.length) {
-document.getElementById("bruteProgress").textContent = "完成! 发现 " + foundMethods.length + " 个方法";
-document.getElementById("bruteBtn").disabled = false;
-bruteRunning = false;
-return;
-}
-
-var methodName = METHOD_DICT[idx];
-var exists = false;
-var risk = "pending";
-
-try {
-if (targetObj[methodName] !== undefined) {
-exists = true;
-risk = getRisk(methodName);
-foundMethods.push({ name: methodName, type: typeof targetObj[methodName], risk: risk });
-
-var itemClass = "brute-item found";
-if (risk === "high") itemClass += " tag-risk-high";
-else if (risk === "medium") itemClass += " tag-risk-medium";
-else if (risk === "low") itemClass += " tag-risk-low";
-
-var html = '<div class="' + itemClass + '" onclick="setBruteMethod(\'' + targetName + '\', \'' + methodName + '\')">';
-html += '<span style="font-weight:600">' + methodName + '</span>';
-html += ' <span style="color:var(--text-dim)">' + typeof targetObj[methodName] + '</span>';
-html += ' <span class="obj-tag tag-risk-' + risk + '">' + risk + '</span>';
-html += '</div>';
-document.getElementById("bruteResults").innerHTML += html;
-}
-} catch(e) {
-// 方法访问出错，跳过
-}
-
-idx++;
-document.getElementById("bruteProgress").textContent = "正在爆破... " + idx + "/" + METHOD_DICT.length + " (发现: " + foundMethods.length + ")";
-
-if (idx % 10 === 0) {
-// 每10个方法稍作延迟，避免卡顿
-bruteTimer = setTimeout(bruteWorker, 10);
-} else {
-bruteWorker();
-}
-}
-
-bruteWorker();
-};
-
-window.stopBrute = function() {
-bruteRunning = false;
-if (bruteTimer) clearTimeout(bruteTimer);
-document.getElementById("bruteProgress").textContent = "已停止，发现 " + foundMethods.length + " 个方法";
-document.getElementById("bruteBtn").disabled = false;
-};
-
-window.setBruteMethod = function(objName, methodName) {
-document.getElementById("callPath").textContent = "window." + objName;
-document.getElementById("methodName").value = methodName;
-};
-
-// ===================== 执行调用 =====================
-window.changeCallMode = function() {
-var mode = document.getElementById("callMode").value;
-var hint = document.getElementById("paramHint");
-var input = document.getElementById("paramInput");
-
-switch(mode) {
-case "manual":
-hint.textContent = "直接输入参数值";
-input.placeholder = '如: test 或 {"a":1}';
-break;
-case "string":
-hint.textContent = "字符串参数";
-input.placeholder = "输入字符串内容";
-break;
-case "json":
-hint.textContent = "JSON字符串参数";
-input.placeholder = '如: {"a":1,"b":2}';
-break;
-case "multi":
-hint.textContent = "多参数，JSON数组格式";
-input.placeholder = '如: ["test", {"a":1}]';
-break;
-}
-};
-
-window.doExecute = function() {
-var path = document.getElementById("callPath").textContent;
-var methodName = document.getElementById("methodName").value.trim();
-var paramStr = document.getElementById("paramInput").value.trim();
-var mode = document.getElementById("callMode").value;
-var useCallback = document.getElementById("useCallback").checked;
-
-var resultDiv = document.getElementById("callResult");
-resultDiv.className = "call-result show";
-resultDiv.textContent = "执行中...";
-
-try {
-// 解析路径，获取对象
-var parts = path.split(".");
-var obj = window;
-for (var i = 1; i < parts.length; i++) {
-obj = obj[parts[i]];
-}
-
-// 解析参数
-var args = [];
-if (paramStr) {
-switch(mode) {
-case "manual":
-try { args = [JSON.parse(paramStr)]; } catch(e) { args = [paramStr]; }
-break;
-case "string":
-args = [paramStr];
-break;
-case "json":
-args = [JSON.parse(paramStr)];
-break;
-case "multi":
-args = JSON.parse(paramStr);
-break;
-}
-}
-
-// 执行
-var result;
-if (methodName && obj[methodName]) {
-if (typeof obj[methodName] === "function") {
-if (useCallback) {
-var cbName = "_cb_" + Date.now();
-window[cbName] = function(data) {
-resultDiv.className = "call-result show ok";
-try { resultDiv.textContent = "✅ 回调结果:\n" + JSON.stringify(data, null, 2); }
-catch(e) { resultDiv.textContent = "✅ 回调结果:\n" + String(data); }
-delete window[cbName];
-};
-args.push(window[cbName]);
-obj[methodName].apply(obj, args);
-resultDiv.textContent = "⏳ 已发送，等待回调...";
-return;
-} else {
-result = obj[methodName].apply(obj, args);
-}
-} else {
-result = obj[methodName];
-}
-} else {
-result = obj;
-}
-
-var resultStr;
-try { resultStr = typeof result === "object" ? JSON.stringify(result, null, 2) : String(result); }
-catch(e) { resultStr = String(result); }
-
-resultDiv.className = "call-result show ok";
-resultDiv.textContent = "✅ 结果:\n" + (resultStr || "(无返回值)");
-} catch(e) {
-resultDiv.className = "call-result show err";
-resultDiv.textContent = "❌ 错误: " + e.message;
-}
-};
-
-// ===================== Deeplink测试 =====================
-window.testDeeplink = function() {
-var url = document.getElementById("deeplinkUrl").value.trim();
-if (!url) {
-document.getElementById("deeplinkResult").className = "call-result show err";
-document.getElementById("deeplinkResult").textContent = "请输入URL";
-return;
-}
-
-var resultDiv = document.getElementById("deeplinkResult");
-resultDiv.className = "call-result show";
-resultDiv.textContent = "发送中...";
-
-// 创建回调
-var cbName = "_dlcb_" + Date.now();
-window[cbName] = function(data) {
-resultDiv.className = "call-result show ok";
-try { resultDiv.textContent = "✅ 响应:\n" + JSON.stringify(data, null, 2); }
-catch(e) { resultDiv.textContent = "✅ 响应:\n" + String(data); }
-delete window[cbName];
-};
-
-// 添加callback参数
-var urlWithCb = url;
-if (url.indexOf("callback") === -1) {
-urlWithCb = url + (url.indexOf("?") === -1 ? "?" : "&") + "callback=" + cbName;
-}
-
-// 发送
-var iframe = document.createElement("iframe");
-iframe.style.display = "none";
-iframe.src = urlWithCb;
-document.body.appendChild(iframe);
-
-setTimeout(function() {
-try { document.body.removeChild(iframe); } catch(e) {}
-}, 3000);
-
-resultDiv.textContent = "⏳ 已发送: " + urlWithCb + "\n等待响应...";
-
-// 超时
-setTimeout(function() {
-if (window[cbName]) {
-resultDiv.className = "call-result show err";
-resultDiv.textContent = "⏱️ 超时(5秒)，可能:\n- Bridge不存在\n- 原生未实现回调";
-delete window[cbName];
-}
-}, 5000);
-};
-
-// ===================== 导出 =====================
-window.exportData = function() {
-var data = {
-scanTime: new Date().toISOString(),
-userAgent: navigator.userAgent,
-url: location.href,
-objects: objects.map(function(o) {
-return { name: o.name, type: o.type, baseline: o.baseline, risk: o.risk };
-}),
-foundMethods: foundMethods
-};
-var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-var a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = "jsinterface-scan-" + Date.now() + ".json";
-a.click();
-};
-
-// ===================== 主题 =====================
-window.toggleTheme = function() {
-var html = document.documentElement;
-html.setAttribute("data-theme", html.getAttribute("data-theme") === "light" ? "dark" : "light");
-localStorage.setItem("jsil-theme", html.getAttribute("data-theme"));
-};
-var st = localStorage.getItem("jsil-theme");
-if (st) document.documentElement.setAttribute("data-theme", st);
-
-// ===================== 初始化 =====================
-scan();
 })();
 </script>
 </body>
