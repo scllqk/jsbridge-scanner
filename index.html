@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>WebView Scanner</title>
 <style>
+    /* 现代极客风配色方案 */
     :root {
         --bg: #0d1117; --card: #161b22; --card-hover: #21262d; --border: #30363d;
         --text: #c9d1d9; --text-dim: #8b949e;
@@ -22,6 +23,9 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
+    /* ==========================================
+       ✨ 上下分层的完美 Header 布局
+       ========================================== */
     .header { 
         background: rgba(22, 27, 34, 0.85); 
         backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
@@ -50,7 +54,6 @@
     .btn.danger { background: rgba(248, 81, 73, 0.1); border-color: var(--red); color: var(--red); }
     .btn.warn { background: rgba(210, 153, 34, 0.1); border-color: var(--yellow); color: var(--yellow); }
 
-    /* 优化输入框和选择框，去除默认丑陋样式 */
     .input-base { width: 100%; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; outline: none; transition: border-color 0.2s; font-size: 13px; -webkit-appearance: none; appearance: none;}
     .input-base:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(88,166,255,0.2); }
     select.input-base { background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%238b949e" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>'); background-repeat: no-repeat; background-position: right 10px center; background-size: 8px 10px; padding-right: 28px; cursor: pointer;}
@@ -135,7 +138,7 @@
     <div class="tab active" onclick="switchTab(0)"><span class="tab-icon">🌐</span><span>环境</span></div>
     <div class="tab" onclick="switchTab(1)"><span class="tab-icon">📦</span><span>对象池</span></div>
     <div class="tab" onclick="switchTab(2)"><span class="tab-icon">🌳</span><span>解析树</span></div>
-    <div class="tab" onclick="switchTab(3)"><span class="tab-icon">📡</span><span>终端</span></div>
+    <div class="tab" onclick="switchTab(3)"><span class="tab-icon">📡</span><span>调试</span></div>
 </div>
 
 <div class="workspace">
@@ -164,7 +167,7 @@
             
             <div class="env-card" style="margin-bottom: 0; flex-shrink: 0; padding: 12px;">
                 <div style="color:var(--red); font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                    <span>🔥</span> <span>字典爆破 (Brute Force)</span>
+                    <span>🔥</span> <span>字典盲测 (Brute Force)</span>
                 </div>
                 <div style="font-size:11px; color:var(--text-dim); margin-bottom:10px; line-height:1.4;">
                     针对隐式绑定的原生对象，使用 InfoSec 字典安全探测未公开接口。
@@ -196,7 +199,7 @@
 
     <div class="panel">
         <div class="panel-title">
-            <span>📡 渗透调用终端</span>
+            <span>📡 接口调试终端</span>
             <button class="btn danger" style="height:24px; padding: 0 8px; font-size: 11px;" id="btn-hook" onclick="__WVS__.hook()">部署 AOP Hook</button>
         </div>
         <div class="panel-body">
@@ -231,7 +234,7 @@
 <div class="modal" id="md-modal">
     <div class="modal-content">
         <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items:center; background: var(--card);">
-            <h3 style="color:var(--blue); font-size: 15px; margin:0;">渗透测试报告 (Markdown)</h3>
+            <h3 style="color:var(--blue); font-size: 15px; margin:0;">审计测试报告 (Markdown)</h3>
             <div style="display:flex; gap:10px;">
                 <button class="btn primary" onclick="__WVS__.copyReport()">复制</button>
                 <button class="btn" onclick="document.getElementById('md-modal').style.display='none'">关闭</button>
@@ -255,7 +258,6 @@ window.__WVS__ = (function() {
     const INTERNAL_KEYS = ["switchTab", "expandAll", "collapseAll", "toggleTheme", "__WVS__"];
     const IGNORES = ["apply", "bind", "call", "toString", "length", "name", "prototype", "constructor", "caller", "callee"];
     
-    // 【强力降噪名单】：过滤无用的常见前端探针、广告框架和统计代码
     const NOISE_KEYS = [
         "__cfBeacon", "webpackJsonp", "__VUE", "__REACT", "_ga", "_gat", "gtag", "dataLayer", 
         "fbq", "ym", "ymq", "yandex", "clarity", "vConsole", "eruda", "fundebug", 
@@ -297,7 +299,6 @@ window.__WVS__ = (function() {
     let bridgeFrameworkInfo = "Unknown";
     const termBox = document.getElementById('term-box');
 
-    // 【截断防御机制】防止 Wappalyzer 等巨型返回包刷毁终端
     function log(msg, type = 'c-sys') {
         const time = new Date().toLocaleTimeString().split(' ')[0];
         const line = document.createElement('div');
@@ -307,7 +308,6 @@ window.__WVS__ = (function() {
         termBox.scrollTop = termBox.scrollHeight;
     }
     
-    // 超长文本截断
     function safeStr(obj, limit = 180) { 
         try { 
             let str = typeof obj === 'object' && obj !== null ? JSON.stringify(obj) : String(obj); 
@@ -316,12 +316,10 @@ window.__WVS__ = (function() {
         } catch(e) { return "[Object]"; } 
     }
     
-    // 智能降低误报率：只有 function 才会被标记高危（字符串变量不构成 RCE 等风险）
     function evalRisk(name, typeStr) {
         const s = name.toLowerCase();
         for(let r of KNOWLEDGE) { 
             if(r.kw.some(k => s.includes(k))) {
-                // 如果命中高危规则，但只是个字符串/数字，则降级为中危（可能是硬编码配置）
                 if (typeStr !== 'function' && typeStr !== 'object' && (r.r === 't-crit' || r.r === 't-high')) {
                     return { cat: r.cat + " (静态配置)", r: "t-med", desc: "命中了敏感关键字，但由于是静态变量，危害降级。" };
                 }
@@ -518,7 +516,7 @@ window.__WVS__ = (function() {
         }
 
         let valHTML = "";
-        if(!isParent) valHTML = `<span class="tree-val"> = ${safeStr(obj, 100)}</span>`; // 树形结构里更严格的截断
+        if(!isParent) valHTML = `<span class="tree-val"> = ${safeStr(obj, 100)}</span>`; 
         
         let actionHTML = (typeStr === 'function' || path.includes("messageHandlers")) ? 
             `<button class="btn" style="padding:4px 8px; margin-left:auto; font-size:11px;" onclick="__WVS__.loadPath('${path}')">转到终端</button>` : '';
@@ -532,7 +530,7 @@ window.__WVS__ = (function() {
             try {
                 let keys = Object.getOwnPropertyNames(obj);
                 const proto = Object.getPrototypeOf(obj);
-                if(proto && proto !== Object.prototype && proto !== Function.prototype) keys = [...new Set([...keys, ...Object.getOwnPropertyNames(proto)])];
+                if(proto && proto !== Object.prototype && proto !== Function.prototype) keys = [...new Set([...props, ...Object.getOwnPropertyNames(proto)])];
                 
                 keys.forEach(k => {
                     if(IGNORES.includes(k)) return;
