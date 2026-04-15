@@ -21,7 +21,7 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; background: var(--bg); color: var(--text); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
     /* 头部 */
-    .header { background: var(--card); padding: env(safe-area-inset-top) 15px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 8px;}
+    .header { background: var(--card); padding: env(safe-area-inset-top) 10px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 8px;}
     .header h1 { font-size: 16px; color: var(--blue); text-shadow: 0 0 10px rgba(0,229,255,0.3); }
     .bridge-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid var(--blue); background: rgba(0,229,255,0.1); color: var(--blue); }
     
@@ -31,9 +31,10 @@
     .btn.danger { background: rgba(255, 51, 102, 0.1); border-color: var(--red); color: var(--red); }
     .btn.warn { background: rgba(255, 193, 7, 0.1); border-color: var(--yellow); color: var(--yellow); }
 
-    /* 移动端 Tab 栏 */
-    .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .tab { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; font-weight: bold; color: var(--text-dim); border-bottom: 2px solid transparent; cursor: pointer;}
+    /* 移动端 5-Tab 栏 (横向滚动防挤压) */
+    .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; width: 100%; overflow-x: auto; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab { flex: 1; min-width: 60px; text-align: center; padding: 12px 4px; font-size: 12px; font-weight: bold; color: var(--text-dim); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;}
     .tab.active { color: var(--blue); border-bottom-color: var(--blue); background: rgba(0,229,255,0.05);}
 
     /* 布局 */
@@ -41,11 +42,11 @@
     .panel { display: none; flex-direction: column; background: var(--bg); width: 100%; height: 100%; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom);}
     .panel.active { display: flex; }
     .panel-title { background: var(--card); padding: 10px 12px; font-weight: bold; color: var(--text); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; position: sticky; top: 0; z-index: 10;}
-    .panel-body { padding: 12px; }
+    .panel-body { padding: 12px; display: flex; flex-direction: column; flex: 1;}
 
     /* 环境变量面板 */
     .env-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
-    .env-label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; font-weight: bold; }
+    .env-label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; font-weight: bold; text-transform: uppercase;}
     .env-val { font-family: monospace; font-size: 12px; color: var(--green); word-break: break-all; max-height: 100px; overflow-y: auto; }
 
     /* 对象列表 */
@@ -65,11 +66,11 @@
     .tree-children.show { display: block; }
 
     /* 终端控制台 */
-    .input-base { width: 100%; padding: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: monospace; outline: none; margin-bottom: 10px; }
+    .input-base { width: 100%; padding: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: monospace; outline: none; margin-bottom: 10px; font-size: 13px;}
     .input-base:focus { border-color: var(--blue); }
     .control-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; width: 100%;}
     
-    .terminal { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 12px; height: 220px; overflow-y: auto; font-family: "Courier New", monospace; font-size: 12px; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);}
+    .terminal { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 12px; flex: 1; overflow-y: auto; font-family: "Courier New", monospace; font-size: 11px; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); min-height: 180px;}
     .log-line { margin-bottom: 6px; word-break: break-all; line-height: 1.4;}
     .c-time { color: var(--text-dim); margin-right: 5px; user-select: none;}
     .c-ok { color: var(--green); } .c-err { color: var(--red); } .c-sys { color: var(--blue); } .c-warn { color: var(--yellow); } .c-hook { color: var(--purple); }
@@ -81,8 +82,8 @@
 
     @media (min-width: 900px) {
         .tabs { display: none; }
-        .workspace { flex-direction: row; }
-        .panel { display: flex !important; border-right: 1px solid var(--border); height: 100%; width: 33.33%; }
+        .workspace { flex-direction: row; flex-wrap: wrap;}
+        .panel { display: flex !important; border-right: 1px solid var(--border); height: 100%; width: 25%; border-bottom: none;}
         .panel:last-child { border-right: none; }
     }
 </style>
@@ -105,8 +106,9 @@
 <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">🌐 环境</div>
     <div class="tab" onclick="switchTab(1)">📦 对象</div>
-    <div class="tab" onclick="switchTab(2)">🌳 解析</div>
-    <div class="tab" onclick="switchTab(3)">📡 终端</div>
+    <div class="tab" onclick="switchTab(2)">🔥 撞库</div>
+    <div class="tab" onclick="switchTab(3)">🌳 解析</div>
+    <div class="tab" onclick="switchTab(4)">📡 终端</div>
 </div>
 
 <div class="workspace">
@@ -125,20 +127,26 @@
 
     <div class="panel">
         <div class="panel-title">
-            <span>📦 对象池 (<span id="obj-count">0</span>)</span>
-            <button class="btn primary" style="padding: 2px 8px;" onclick="__WVS__.scan()">🔄 重新扫描</button>
+            <span>📦 注入对象池 (<span id="obj-count">0</span>)</span>
+            <button class="btn primary" style="padding: 2px 8px;" onclick="__WVS__.scan()">🔄 扫描</button>
         </div>
-        <div class="panel-body" style="display: flex; flex-direction: column; padding: 10px;">
+        <div class="panel-body">
             <input type="text" class="search-box" id="search-input" placeholder="搜索对象名称..." oninput="__WVS__.filter()">
-            <div id="obj-list" style="flex: 1; overflow-y: auto; margin-bottom: 10px;"></div>
-            
-            <div style="flex-shrink: 0; background: var(--card); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
-                <div style="color:var(--red); font-weight:bold; margin-bottom:8px;">🔥 方法爆破 (P1)</div>
-                <div class="control-row" style="margin-bottom:0;">
-                    <select id="brute-target" class="input-base" style="margin-bottom:0; flex: 1;"></select>
-                    <button class="btn danger" id="btn-brute" onclick="__WVS__.brute()">START</button>
-                </div>
+            <div id="obj-list" style="flex: 1; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">
+            <span>🔥 字典爆破 (Brute Force)</span>
+        </div>
+        <div class="panel-body">
+            <div style="background:rgba(255,51,102,0.1); border-left:3px solid var(--red); padding:12px; font-size:12px; margin-bottom:15px; color:var(--text); line-height: 1.5; border-radius: 4px;">
+                <strong>针对性脱壳：</strong> 如果你在对象池中发现某个原生对象没有暴露任何子方法（疑似被 <code>@JavascriptInterface</code> 隐藏或混淆），请在此处使用安全 <code>in</code> 操作符强行撞库。
             </div>
+            <select id="brute-target" class="input-base" style="margin-bottom: 15px; font-size: 14px;"></select>
+            <button class="btn danger" style="width: 100%; padding: 12px; font-size: 14px;" id="btn-brute" onclick="__WVS__.brute()">💀 发起高频反射探测</button>
+            <div id="brute-progress" style="margin-top: 15px; text-align: center; color: var(--blue); font-size: 13px; font-family:monospace; font-weight: bold;">等待选择目标...</div>
         </div>
     </div>
 
@@ -151,7 +159,7 @@
             </div>
         </div>
         <div class="panel-body" id="tree-body">
-            <div style="text-align:center; padding: 40px; color: var(--text-dim);">👈 请在列表中选择对象</div>
+            <div style="text-align:center; padding: 40px; color: var(--text-dim);">👈 请在【对象池】选择对象</div>
         </div>
     </div>
 
@@ -160,14 +168,14 @@
             <span>📡 交互终端 (Terminal)</span>
             <button class="btn danger" style="padding: 2px 8px;" id="btn-hook" onclick="__WVS__.hook()">[P3] 部署 Hook</button>
         </div>
-        <div class="panel-body" style="display: flex; flex-direction: column;">
+        <div class="panel-body">
             <div class="terminal" id="term-box"></div>
             
             <div style="flex-shrink: 0;">
                 <input type="text" id="exec-path" class="input-base" style="color:var(--green); font-weight:bold;" placeholder="路径 (如: window.obj.func 或 jsbridge://)">
                 
                 <div class="control-row">
-                    <input type="text" id="exec-params" class="input-base" style="margin-bottom:0; flex:1;" placeholder='参数 / Payload (如 {"id":1} 或 "test")'>
+                    <input type="text" id="exec-params" class="input-base" style="margin-bottom:0; flex:1;" placeholder='参数 / Payload (如 {"id":1})'>
                     <label style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; white-space: nowrap;">
                         <input type="checkbox" id="use-cb"> Callback
                     </label>
@@ -197,6 +205,7 @@
 </div>
 
 <script>
+// 选项卡控制
 function switchTab(index) {
     if(window.innerWidth > 900) return;
     document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
@@ -210,6 +219,7 @@ window.__WVS__ = (function() {
     const INTERNAL_KEYS = ["switchTab", "expandAll", "collapseAll", "toggleTheme", "__WVS__"];
     const IGNORES = ["apply", "bind", "call", "toString", "length", "name", "prototype", "constructor", "caller", "callee"];
     
+    // [P0] 结构化知识库
     const KNOWLEDGE = [
         { kw: ["exec","eval","shell","system"], cat: "命令执行", r: "t-crit", desc: "可执行系统级命令" },
         { kw: ["pay","alipay","wxpay"], cat: "支付接口", r: "t-crit", desc: "拉起支付结算链路" },
@@ -221,9 +231,9 @@ window.__WVS__ = (function() {
         { kw: ["location","gps"], cat: "物理定位", r: "t-med", desc: "获取真实GPS坐标" }
     ];
     
+    // [P1] 字典爆破库
     const BRUTE_DICT = ["getUserInfo","getDeviceId","getToken","pay","getLocation","read","write","download","openUrl","startActivity","getContacts","invoke","execute","call","postMessage","showAddressBook","scanQRCode","closeWindow","setupWebViewJavascriptBridge"];
     
-    // Fuzz 参数大幅丰富，用于探测正确的传参类型
     const FUZZ_PARAMS = [
         null, undefined, "", 0, 1, true, false,
         "test", "{}", "[]", '{"id":"1"}', '["test"]',
@@ -280,6 +290,7 @@ window.__WVS__ = (function() {
         log(`环境探测: ${os} - ${fw}`);
     }
 
+    // [P0] 准确发现
     function scan() {
         let keys = [];
         try {
@@ -357,7 +368,7 @@ window.__WVS__ = (function() {
                 document.querySelectorAll('.obj-item').forEach(el => el.classList.remove('active'));
                 div.classList.add('active');
                 renderTree(item);
-                switchTab(2); // 选中后切到解析 Tab
+                if(window.innerWidth <= 900) switchTab(3); // 选中后切到解析 Tab
             };
             list.appendChild(div);
         });
@@ -423,7 +434,7 @@ window.__WVS__ = (function() {
 
     function updateBruteSelect() {
         const sel = document.getElementById('brute-target');
-        sel.innerHTML = '<option value="">选择目标...</option>';
+        sel.innerHTML = '<option value="">-- 请选择要脱壳的注入对象 --</option>';
         scanData.forEach(i => {
             if(typeof i.objRef === 'object' && !i.name.includes("messageHandlers")) {
                 sel.innerHTML += `<option value="${i.name}">window.${i.name}</option>`;
@@ -452,9 +463,10 @@ window.__WVS__ = (function() {
             const cleanPath = path.replace(/ \[.*?\]/g, "");
             document.getElementById('exec-path').value = cleanPath;
             log(`已装载测试路径: ${cleanPath}`, 'c-warn');
-            switchTab(3); // 切到终端
+            if(window.innerWidth <= 900) switchTab(4); // 移动端切到终端
         },
 
+        // [P1] 接口调用
         execute: function() {
             const path = document.getElementById('exec-path').value.replace("window.", "");
             const pRaw = document.getElementById('exec-params').value.trim();
@@ -491,7 +503,6 @@ window.__WVS__ = (function() {
             } catch(e) { log(`! 执行异常: ${e.message}`, 'c-err'); }
         },
 
-        // 验证存活的 Fuzz，成功即停止
         fuzz: function() {
             const path = document.getElementById('exec-path').value.replace("window.", "");
             if(!path) return alert("请指定执行路径");
@@ -513,10 +524,8 @@ window.__WVS__ = (function() {
                     if(param === "null") arg = null; else if(param === "undefined") arg = undefined; else { try{arg=JSON.parse(param);}catch(e){} }
                     
                     t.call(p, arg);
-                    
-                    // 能走到这里没报错，说明类型校验通过了！
                     log(`🎉 [Fuzz 成功] 该接口成功连通！接受的参数类型为: ${typeof arg} (${safeStr(param)})`, 'c-ok');
-                    success = true; // 成功即停止发包
+                    success = true; 
                 } catch(e) {
                     log(`[Fuzz ${idx+1}] 参数: ${safeStr(param).substring(0,10)} -> 失败拦截`, 'c-err');
                     setTimeout(() => nextFuzz(idx + 1), 50);
@@ -525,13 +534,15 @@ window.__WVS__ = (function() {
             nextFuzz(0);
         },
 
+        // [P1] 安全的 in 操作符方法爆破
         brute: function() {
             const tName = document.getElementById('brute-target').value;
-            if(!tName) return alert("请选择目标");
+            if(!tName) return alert("请先在下拉框选择爆破目标！");
             
             let { target: targetObj } = resolvePath(tName);
             if(!targetObj) return log(`[Error] 无法解析目标 ${tName}`, 'c-err');
 
+            const progDiv = document.getElementById('brute-progress');
             document.getElementById('btn-brute').disabled = true;
             let idx = 0, found = 0;
             log(`[Brute] 开始对 ${tName} 撞库...`, 'c-warn');
@@ -541,15 +552,16 @@ window.__WVS__ = (function() {
             function step() {
                 if(idx >= BRUTE_DICT.length) {
                     document.getElementById('btn-brute').disabled = false;
+                    progDiv.innerText = `爆破结束：撞击 ${BRUTE_DICT.length} 次，逼出 ${found} 个隐藏入口。`;
                     log(`[Brute] 完毕，逼出 ${found} 个隐藏入口。`, 'c-ok');
                     renderList();
                     if(document.getElementById('exec-path').value.includes(tName)) renderTree(scanItem);
                     return;
                 }
                 const mName = BRUTE_DICT[idx];
+                progDiv.innerText = `探测: .${mName}() [${idx+1}/${BRUTE_DICT.length}]`;
                 
                 try {
-                    // 使用安全 in 探测
                     if(mName in targetObj && !scanItem.methods.some(m => m.name === mName)) {
                         found++;
                         scanItem.methods.push({ name: mName, type: "function", info: evalRisk(mName) });
@@ -582,6 +594,7 @@ window.__WVS__ = (function() {
             setTimeout(() => iframe.remove(), 3000);
         },
 
+        // [P3] 全局 Hook
         hook: function() {
             if(isHooked) return log('Hook 已开启，重置请刷新', 'c-warn');
             let hCount = 0;
@@ -608,9 +621,10 @@ window.__WVS__ = (function() {
             window.addEventListener("message", e => log(`[异步推送] Msg: ${safeStr(e.data)}`, 'c-hook'));
             isHooked = true;
             document.getElementById('btn-hook').innerText = "🛑 AOP Hook 监听中";
-            log(`AOP 部署完成，接管了 ${hCount} 个底层入口。`, 'c-ok');
+            log(`[P3] AOP 部署完成，接管了 ${hCount} 个底层入口。`, 'c-ok');
         },
 
+        // [P2] 导出报告
         export: function() {
             let md = `# JSBridge 安全扫描报告\n\n> **扫描时间:** ${new Date().toLocaleString()}\n> **环境指纹:** ${document.getElementById('bridge-badge').innerText}\n> **UA:** ${navigator.userAgent}\n\n`;
             
