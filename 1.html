@@ -69,4 +69,662 @@
     .c-time { color: var(--text-dim); margin-right: 5px; user-select: none;}
     .c-ok { color: var(--green); } .c-err { color: var(--red); } .c-sys { color: var(--blue); } .c-warn { color: var(--yellow); } .c-hook { color: var(--purple); }
 
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; padding: env(safe-area-inset-top) 15px 15
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; padding: env(safe-area-inset-top) 15px 15px; flex-direction: column;}
+    .modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 8px; flex: 1; display: flex; flex-direction: column; overflow: hidden; max-width: 800px; margin: 0 auto; width: 100%;}
+    .modal-body { flex: 1; padding: 15px; overflow-y: auto; font-family: monospace; font-size: 12px; white-space: pre-wrap; -webkit-user-select: text; user-select: text; }
+
+    @media (min-width: 900px) {
+        .tabs { display: none; }
+        .workspace { flex-direction: row; flex-wrap: wrap;}
+        .panel { display: flex !important; border-right: 1px solid var(--border); height: 100%; width: 25%; border-bottom: none;}
+        .panel:last-child { border-right: none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>🛡️ Ultimate JSBridge Lab</h1>
+        <div style="margin-top:6px;">
+            <span class="bridge-badge" id="bridge-badge">识别中...</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="toggleTheme()">🌓</button>
+        <button class="btn primary" onclick="__WVS__.export()">📄 导出</button>
+    </div>
+</div>
+
+<div class="tabs" id="mobile-tabs">
+    <div class="tab active" onclick="switchTab(0)">🌐 环境</div>
+    <div class="tab" onclick="switchTab(1)">📦 对象</div>
+    <div class="tab" onclick="switchTab(2)">🌳 解析</div>
+    <div class="tab" onclick="switchTab(3)">📡 终端</div>
+</div>
+
+<div class="workspace">
+    <div class="panel active">
+        <div class="panel-title">
+            <span>🌐 运行环境与被动收集</span>
+            <button class="btn" style="padding: 2px 8px;" onclick="location.reload()">强制重载</button>
+        </div>
+        <div class="panel-body">
+            <div class="env-card"><div class="env-label">User-Agent</div><div class="env-val" style="color:var(--text);" id="env-ua"></div></div>
+            <div class="env-card"><div class="env-label">Document Cookie</div><div class="env-val" id="env-cookie"></div></div>
+            <div class="env-card"><div class="env-label">CookieStore (Async)</div><div class="env-val" id="env-cstore">不支持/检测中...</div></div>
+            <div class="env-card"><div class="env-label">LocalStorage (Keys)</div><div class="env-val" id="env-ls"></div></div>
+            <div class="env-card"><div class="env-label">SessionStorage (Keys)</div><div class="env-val" id="env-ss"></div></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">
+            <span>📦 注入对象池 (<span id="obj-count">0</span>)</span>
+            <button class="btn primary" style="padding: 2px 8px;" onclick="__WVS__.scan()">🔄 重新扫描</button>
+        </div>
+        <div class="panel-body" style="padding: 10px; display: flex; flex-direction: column; height: 100%;">
+            <input type="text" class="search-box" id="search-input" placeholder="搜索对象名称..." oninput="__WVS__.filter()">
+            <div id="obj-list" style="flex: 1; overflow-y: auto; margin-bottom: 10px; border-bottom: 1px solid var(--border);"></div>
+            
+            <div style="flex-shrink: 0; background: var(--card); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                <div style="color:var(--red); font-weight:bold; margin-bottom:8px;">🔥 字典补充探测 (P1)</div>
+                <div class="control-row" style="margin-bottom:0;">
+                    <select id="brute-target" class="input-base" style="margin-bottom:0; flex: 1;"></select>
+                    <button class="btn danger" id="btn-brute" onclick="__WVS__.brute()">开始探测</button>
+                </div>
+                <div id="brute-progress" style="margin-top: 8px; text-align: center; color: var(--blue); font-size: 12px; font-family:monospace; font-weight: bold; display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">
+            <span id="tree-title">🌳 对象深度分析</span>
+            <div style="display:flex; gap:6px;">
+                <button class="btn" style="padding: 2px 8px;" onclick="expandAll()">展开</button>
+                <button class="btn" style="padding: 2px 8px;" onclick="collapseAll()">折叠</button>
+            </div>
+        </div>
+        <div class="panel-body" id="tree-body">
+            <div style="text-align:center; padding: 40px; color: var(--text-dim);">👈 请在【对象池】选择对象</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-title">
+            <span>📡 交互终端 (Terminal)</span>
+            <button class="btn danger" style="padding: 2px 8px;" id="btn-hook" onclick="__WVS__.hook()">[P3] 部署 Hook</button>
+        </div>
+        <div class="panel-body" style="display: flex; flex-direction: column;">
+            <div class="terminal" id="term-box"></div>
+            
+            <div style="flex-shrink: 0;">
+                <input type="text" id="exec-path" class="input-base" style="color:var(--green); font-weight:bold;" placeholder="路径 (如: window.obj.func) 或 JS代码">
+                
+                <div class="control-row">
+                    <select id="call-mode" class="input-base" style="margin-bottom:0; flex:1;" onchange="__WVS__.changeMode()">
+                        <option value="json">JSON 解析</option>
+                        <option value="string">String 纯文本</option>
+                        <option value="eval">Eval JS (高级)</option>
+                    </select>
+                    <label style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; white-space: nowrap;" title="自动注入时间戳函数以捕获异步结果">
+                        <input type="checkbox" id="use-cb"> Callback
+                    </label>
+                </div>
+                
+                <input type="text" id="exec-params" class="input-base" placeholder='参数 / Payload (如 {"id":1})'>
+                
+                <div class="control-row">
+                    <button class="btn primary" style="flex: 1;" onclick="__WVS__.execute()">⚡ 执行 Call</button>
+                    <button class="btn warn" style="flex: 1;" onclick="__WVS__.fuzz()" title="自动推测存活参数">🧪 Fuzz</button>
+                    <button class="btn" style="flex: 1;" onclick="__WVS__.deeplink()">🔗 Deeplink</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="md-modal">
+    <div class="modal-content">
+        <div style="padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items:center;">
+            <h3 style="color:var(--blue);">渗透报告 (Markdown)</h3>
+            <div style="display:flex; gap:8px;">
+                <button class="btn primary" onclick="__WVS__.copyReport()">复制</button>
+                <button class="btn" onclick="document.getElementById('md-modal').style.display='none'">关闭</button>
+            </div>
+        </div>
+        <div class="modal-body" id="md-body"></div>
+    </div>
+</div>
+
+<script>
+function switchTab(index) {
+    if(window.innerWidth > 900) return;
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+    document.querySelectorAll('.workspace > .panel').forEach((p, i) => p.classList.toggle('active', i === index));
+}
+function expandAll() { document.querySelectorAll('.tree-children').forEach(el => el.classList.add('show')); document.querySelectorAll('.tree-toggle').forEach(el => el.innerText = '▼'); }
+function collapseAll() { document.querySelectorAll('.tree-children').forEach(el => el.classList.remove('show')); document.querySelectorAll('.tree-toggle').forEach(el => el.innerText = '▶'); }
+function toggleTheme() { const h = document.documentElement; h.setAttribute("data-theme", h.getAttribute("data-theme") === "light" ? "dark" : "light"); }
+
+window.__WVS__ = (function() {
+    const INTERNAL_KEYS = ["switchTab", "expandAll", "collapseAll", "toggleTheme", "__WVS__"];
+    const IGNORES = ["apply", "bind", "call", "toString", "length", "name", "prototype", "constructor", "caller", "callee"];
+    
+    const KNOWLEDGE = [
+        { kw: ["exec","eval","shell","system","command","nativeexec"], cat: "命令执行", r: "t-crit", desc: "可执行系统级命令" },
+        { kw: ["pay","alipay","wxpay","checkout","wallet"], cat: "支付越权", r: "t-crit", desc: "极高危：未授权拉起支付结算链路" },
+        { kw: ["contact","addressbook","sms","calllog"], cat: "核心隐私", r: "t-high", desc: "高危：静默窃取用户极敏感通讯与信件" },
+        { kw: ["file","readfile","openfile","downloadfile"], cat: "越权文件", r: "t-high", desc: "高危：越权读取App私有沙盒目录" },
+        { kw: ["login","token","auth","session","ticket"], cat: "凭证窃取", r: "t-high", desc: "高危：伪造或窃取登录态凭证" },
+        { kw: ["intent","startactivity","launchapp","openurl","installapk","isapkinstalled"], cat: "组件逃逸", r: "t-high", desc: "高危：越权拉起原生组件或外部恶意行为" },
+        { kw: ["encrypt","decrypt","rsa","aes","md5"], cat: "加密算法", r: "t-high", desc: "高危：调用底层的核心加解密逻辑" },
+        { kw: ["deviceid","imei","mac","uuid","serial"], cat: "设备指纹", r: "t-med", desc: "中危：获取硬件设备唯一标识码" },
+        { kw: ["location","gps","position"], cat: "物理定位", r: "t-med", desc: "中危：静默获取用户真实物理坐标" },
+        { kw: ["storage","getdata","setdata"], cat: "存储操作", r: "t-med", desc: "中危：操作本地持久化缓存数据" }
+    ];
+    
+    // 【吸收你的代码】加入了 isApkInstalled, showDownloadView 等
+    const BRUTE_DICT = [
+        "getUserInfo","getUserId","getDeviceId","getToken","getAccessToken","getTicket","login","logout","register","checkSession","auth","sign",
+        "getImei","getMacAddress","getSimInfo","getNetworkType","getSystemInfo","getDeviceInfo","getAppInfo","getVersion","getBattery","vibrate","getClipboardData",
+        "openUrl","startActivity","jumpTo","closeWindow","goBack","reload","openApp","launchApp","navigateTo","exit","isApkInstalled","showDownloadView",
+        "getLocation","openLocation","openCamera","chooseImage","previewImage","uploadImage","downloadImage","saveImage","startRecord","scanQRCode","scan",
+        "read","write","readFile","writeFile","openFile","downloadFile","uploadFile","setStorage","getStorage","removeStorage","clearStorage","saveFile",
+        "encrypt","decrypt","rsa","aes","md5","base64","getSignature",
+        "invoke","execute","call","postMessage","callNative","send","dispatch","execShell","setupWebViewJavascriptBridge","callHandler","nativeExec",
+        "getContacts","showAddressBook","getCallLog","getSms"
+    ];
+    
+    const FUZZ_PARAMS = [
+        null, undefined, "", 0, 1, -1, true, false, NaN, "test", "{}", "[]", '{"id":1}', '["test"]',
+        2147483647, -2147483648, '{"__proto__":{"vuln":1}}', "A".repeat(5000), "../../../etc/passwd", "file:///data/data/",
+        "javascript:alert(1)", "http://127.0.0.1:8080", "| ls -la"
+    ];
+
+    let scanData = [];
+    let isHooked = false;
+    let bridgeFrameworkInfo = "Unknown";
+    const termBox = document.getElementById('term-box');
+
+    function log(msg, type = 'c-sys') {
+        const time = new Date().toLocaleTimeString().split(' ')[0];
+        const line = document.createElement('div');
+        line.className = `log-line ${type}`;
+        line.innerHTML = `<span class="c-time">[${time}]</span>${msg}`;
+        termBox.appendChild(line);
+        termBox.scrollTop = termBox.scrollHeight;
+    }
+    
+    function safeStr(obj) { try { return typeof obj === 'object' && obj !== null ? JSON.stringify(obj) : String(obj); } catch(e) { return "[Object]"; } }
+    
+    function evalRisk(name) {
+        const s = name.toLowerCase();
+        for(let r of KNOWLEDGE) { if(r.kw.some(k => s.includes(k))) return r; }
+        return { cat: "常规业务", r: "t-none", desc: "未定级之业务属性或方法" };
+    }
+
+    function resolvePath(pathStr) {
+        let t = window; let p = null;
+        pathStr.split('.').forEach(k => { p = t; if(t) t = t[k]; });
+        return { target: t, parent: p };
+    }
+
+    // 【吸收你的代码】新增 cookieStore 与 X5/B站 指纹识别
+    function detectEnvironment() {
+        const ua = navigator.userAgent;
+        document.getElementById('env-ua').innerText = ua;
+        document.getElementById('env-cookie').innerText = document.cookie || "(空或 HttpOnly)";
+        
+        if (window.cookieStore) {
+            window.cookieStore.getAll().then(cookies => {
+                document.getElementById('env-cstore').innerText = cookies.length > 0 ? JSON.stringify(cookies) : "(空)";
+            }).catch(e => document.getElementById('env-cstore').innerText = "读取失败");
+        } else {
+            document.getElementById('env-cstore').innerText = "当前浏览器不支持 CookieStore API";
+        }
+
+        try { document.getElementById('env-ls').innerText = Object.keys(localStorage).join(", ") || "(空)"; } catch(e) { document.getElementById('env-ls').innerText = "跨域读取受限"; }
+        try { document.getElementById('env-ss').innerText = Object.keys(sessionStorage).join(", ") || "(空)"; } catch(e) { document.getElementById('env-ss').innerText = "跨域受限"; }
+
+        let os = "Browser";
+        if (/android/i.test(ua)) os = "Android";
+        else if (/iphone|ipad|ipod/i.test(ua)) os = "iOS";
+
+        let fw = "Native Bridge";
+        if(window.tbs_jsbridge || window.tbs_bridge || /TBS\//i.test(ua)) fw = "Tencent X5 (TBS)";
+        else if(window.biliInject) fw = "Bilibili Container";
+        else if(window.webkit && window.webkit.messageHandlers) fw = "WKWebView";
+        else if(window.WebViewJavascriptBridge || window.JsBridge) fw = "JsBridge Framework";
+        else if(window.cordova) fw = "Cordova";
+        else if(window.ReactNativeWebView) fw = "React Native";
+        
+        bridgeFrameworkInfo = `${os} | ${fw}`;
+        document.getElementById('bridge-badge').innerText = bridgeFrameworkInfo;
+        log(`操作系统与框架识别: ${os} - ${fw}`);
+    }
+
+    function scan() {
+        let keys = [];
+        try {
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            document.body.appendChild(iframe);
+            const clean = Object.getOwnPropertyNames(iframe.contentWindow);
+            const curr = Object.getOwnPropertyNames(window);
+            iframe.remove();
+            keys = curr.filter(k => !clean.includes(k) && !k.startsWith("on") && !k.startsWith("_cb_") && !INTERNAL_KEYS.includes(k));
+        } catch(e) {
+            keys = Object.keys(window).filter(k => !["window","document","location","navigator","localStorage","sessionStorage","console"].includes(k) && !k.startsWith("_cb_") && !INTERNAL_KEYS.includes(k));
+        }
+
+        scanData = [];
+        let tCount = 0;
+
+        if (window.webkit && window.webkit.messageHandlers) {
+            Object.keys(window.webkit.messageHandlers).forEach(h => {
+                const mInfo = evalRisk(h);
+                scanData.push({ 
+                    name: `webkit.messageHandlers.${h}`, objRef: window.webkit.messageHandlers[h], 
+                    info: mInfo, maxRisk: mInfo.r,
+                    methods: [{ name: "postMessage", type: "function", info: evalRisk("postMessage"), isNative: true }]
+                });
+                tCount++;
+            });
+        }
+        
+        const validKeys = keys.filter(k => k !== "webkit");
+        let batchIndex = 0;
+        const badge = document.getElementById('bridge-badge');
+
+        function processBatch() {
+            const end = Math.min(batchIndex + 30, validKeys.length);
+            for (; batchIndex < end; batchIndex++) {
+                const key = validKeys[batchIndex];
+                let obj; 
+                try { 
+                    obj = window[key]; 
+                    if (obj instanceof Node || obj instanceof Element || obj === window || obj === document) continue;
+                } catch(e) { continue; }
+
+                if(typeof obj === "object" || typeof obj === "function") {
+                    let methods = []; let maxR = "t-none";
+                    try {
+                        let props = Object.getOwnPropertyNames(obj);
+                        try {
+                            const proto = Object.getPrototypeOf(obj);
+                            if(proto && proto !== Object.prototype && proto !== Function.prototype) props = [...new Set([...props, ...Object.getOwnPropertyNames(proto)])];
+                        } catch(e) {}
+                        
+                        props.forEach(p => {
+                            if(IGNORES.includes(p)) return;
+                            let mType, isNative = false; 
+                            try { 
+                                mType = typeof obj[p]; 
+                                // 【吸收你的代码】通过 toString 判断是否为原生底层函数
+                                if(mType === 'function' && obj[p].toString().includes('[native code]')) isNative = true;
+                            } catch(e) { mType = 'unknown'; }
+                            
+                            const mInfo = evalRisk(p);
+                            const levels = {"t-crit": 4, "t-high": 3, "t-med": 2, "t-none": 1};
+                            if((levels[mInfo.r]||0) > (levels[maxR]||0)) maxR = mInfo.r;
+                            methods.push({ name: p, type: mType, info: mInfo, isNative: isNative });
+                        });
+                    } catch(e) {}
+                    scanData.push({ name: key, objRef: obj, info: evalRisk(key), maxRisk: maxR, methods: methods });
+                    tCount++;
+                }
+            }
+
+            if (batchIndex < validKeys.length) {
+                badge.innerText = `扫描中 ${Math.floor((batchIndex / validKeys.length) * 100)}%`;
+                setTimeout(processBatch, 5); 
+            } else {
+                badge.innerText = bridgeFrameworkInfo;
+                scanData.sort((a,b) => {
+                    const lvls = {"t-crit": 0, "t-high": 1, "t-med": 2, "t-none": 3};
+                    return (lvls[a.maxRisk]||9) - (lvls[b.maxRisk]||9);
+                });
+
+                document.getElementById('obj-count').innerText = tCount;
+                renderList();
+                updateBruteSelect();
+                log(`沙箱快照对比完成，成功捕获原生对象 ${tCount} 个。`, 'c-ok');
+            }
+        }
+        processBatch();
+    }
+
+    function renderList() {
+        const q = document.getElementById('search-input').value.toLowerCase();
+        const list = document.getElementById('obj-list');
+        list.innerHTML = "";
+        
+        scanData.forEach((item, idx) => {
+            if(q && !item.name.toLowerCase().includes(q)) return;
+            const div = document.createElement('div');
+            div.className = 'obj-item';
+            div.innerHTML = `<span class="obj-name">${item.name.split('.').pop()}</span><span class="tag ${item.maxRisk}">${item.info.cat}</span>`;
+            div.onclick = () => {
+                document.querySelectorAll('.obj-item').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+                renderTree(item);
+                if(window.innerWidth <= 900) switchTab(2);
+            };
+            list.appendChild(div);
+        });
+    }
+
+    function renderTree(item) {
+        document.getElementById('tree-title').innerText = `🌳 ${item.name.split('.').pop()}`;
+        const container = document.getElementById('tree-body');
+        container.innerHTML = "";
+        container.appendChild(buildTreeNode(item.objRef, `window.${item.name}`, new WeakSet(), item.methods));
+    }
+
+    function buildTreeNode(obj, path, visited, predefinedMethods = null) {
+        if(obj && typeof obj === 'object') {
+            if(visited.has(obj)) {
+                const div = document.createElement('div'); div.className = 'tree-item'; div.innerHTML = '<span class="tree-key">🔄 循环引用截断</span>'; return div;
+            }
+            visited.add(obj);
+        }
+
+        const wrapper = document.createElement('div');
+        const head = document.createElement('div');
+        head.className = 'tree-item';
+        
+        const typeStr = typeof obj;
+        const isParent = obj && (typeStr === 'object' || typeStr === 'function');
+        
+        let toggleHTML = isParent ? `<span class="tree-toggle" onclick="this.parentElement.nextElementSibling.classList.toggle('show'); this.innerText = this.innerText==='▶'?'▼':'▶'">▶</span>` : `<span style="width:16px;"></span>`;
+        
+        const name = path.split('.').pop();
+        const rInfo = evalRisk(name);
+        const tagHTML = rInfo.r !== 't-none' ? `<span class="tag ${rInfo.r}">${rInfo.cat}</span>` : '';
+        
+        // 【吸收你的代码】在树状图显示 [Native] 标签
+        let nativeTag = "";
+        if (predefinedMethods) {
+            const m = predefinedMethods.find(x => x.name === name);
+            if (m && m.isNative) nativeTag = `<span class="tag t-native">[Native]</span>`;
+            else if (m && typeStr === 'function') nativeTag = `<span class="tag t-js">[JS Wrapper]</span>`;
+        } else if (typeStr === 'function') {
+            try { if (obj.toString().includes('[native code]')) nativeTag = `<span class="tag t-native">[Native]</span>`; } catch(e) {}
+        }
+
+        let valHTML = "";
+        if(!isParent) valHTML = `<span class="tree-val"> = ${safeStr(obj)}</span>`;
+        
+        let actionHTML = (typeStr === 'function' || path.includes("messageHandlers")) ? 
+            `<button class="btn" style="padding:2px 8px; margin-left:auto; font-size:10px;" onclick="__WVS__.loadPath('${path}')">装载</button>` : '';
+
+        head.innerHTML = `${toggleHTML}<span class="tree-key ${typeStr}">${name}</span><span class="tree-type">${typeStr}</span>${tagHTML}${nativeTag}${valHTML}${actionHTML}`;
+        wrapper.appendChild(head);
+
+        if(isParent) {
+            const childrenDiv = document.createElement('div');
+            childrenDiv.className = 'tree-children';
+            try {
+                let keys = Object.getOwnPropertyNames(obj);
+                const proto = Object.getPrototypeOf(obj);
+                if(proto && proto !== Object.prototype && proto !== Function.prototype) keys = [...new Set([...keys, ...Object.getOwnPropertyNames(proto)])];
+                
+                keys.forEach(k => {
+                    if(IGNORES.includes(k)) return;
+                    try {
+                        const childNode = buildTreeNode(obj[k], `${path}.${k}`, visited);
+                        childrenDiv.appendChild(childNode);
+                    } catch(e){}
+                });
+            } catch(e) {}
+            wrapper.appendChild(childrenDiv);
+        }
+        return wrapper;
+    }
+
+    function updateBruteSelect() {
+        const sel = document.getElementById('brute-target');
+        sel.innerHTML = '<option value="">-- 请选择要辅助探测的容器对象 --</option>';
+        scanData.forEach(i => {
+            if(typeof i.objRef === 'object' && !i.name.includes("messageHandlers")) {
+                sel.innerHTML += `<option value="${i.name}">window.${i.name}</option>`;
+            }
+        });
+    }
+
+    function parseParam(str) {
+        if(!str) return undefined;
+        if(str === "null") return null;
+        if(str === "undefined") return undefined;
+        if(str === "true") return true;
+        if(str === "false") return false;
+        try { return JSON.parse(str); } catch(e) { return str; }
+    }
+
+    return {
+        init: function() {
+            detectEnvironment();
+            scan();
+        },
+        scan: scan,
+        filter: renderList,
+        
+        loadPath: function(path) {
+            const cleanPath = path.replace(/ \[.*?\]/g, "");
+            document.getElementById('exec-path').value = cleanPath;
+            log(`已装载测试路径: ${cleanPath}`, 'c-warn');
+            if(window.innerWidth <= 900) switchTab(3);
+        },
+
+        changeMode: function() {
+            const mode = document.getElementById('call-mode').value;
+            const hints = { "eval": "输入JS代码 (如: location.href='iosbridge://')", "json": '{"a":1}', "string": '"text"' };
+            document.getElementById('exec-params').placeholder = hints[mode] || '参数';
+        },
+
+        execute: function() {
+            const path = document.getElementById('exec-path').value.replace("window.", "");
+            const pRaw = document.getElementById('exec-params').value.trim();
+            const useCb = document.getElementById('use-cb').checked;
+            const mode = document.getElementById('call-mode').value;
+            
+            // 【吸收你的代码】新增 Eval 模式应对 iosbridge:// 等老式框架
+            if(mode === 'eval') {
+                log(`> Eval 执行: ${pRaw}`, 'c-sys');
+                try {
+                    const res = eval(pRaw);
+                    log(`<- 返回值: ${safeStr(res)}`, 'c-ok');
+                } catch(e) { log(`! Eval异常: ${e.message}`, 'c-err'); }
+                return;
+            }
+
+            if(!path) return;
+            log(`> 发起 Call: ${path}`, 'c-sys');
+            try {
+                let { target: t, parent: p } = resolvePath(path);
+                let args = pRaw ? [parseParam(pRaw)] : [];
+
+                if(path.includes("webkit.messageHandlers")) {
+                    t.call(p, args[0]||{});
+                    return log(`<- [iOS] message 载荷已送达底层`, 'c-ok');
+                }
+
+                if(typeof t === 'function') {
+                    if(useCb) {
+                        const cbName = "_cb_" + Date.now();
+                        window[cbName] = function(data) {
+                            log(`[Native 异步返回] ${safeStr(data)}`, 'c-ok');
+                            delete window[cbName];
+                        };
+                        args.push(window[cbName]);
+                        t.apply(p, args);
+                        log(`<- 动态注入了回调监听函数 window.${cbName}，等待响应中...`, 'c-warn');
+                    } else {
+                        const res = t.apply(p, args);
+                        log(`<- [同步返回]: ${res !== undefined ? safeStr(res) : 'undefined'}`, 'c-ok');
+                    }
+                } else {
+                    log(`<- 属性变量读取: ${safeStr(t)}`, 'c-ok');
+                }
+            } catch(e) { log(`! 执行阻断/崩溃: ${e.message}`, 'c-err'); }
+        },
+
+        fuzz: function() {
+            const path = document.getElementById('exec-path').value.replace("window.", "");
+            if(!path) return alert("请指定执行路径");
+            
+            let { target: t, parent: p } = resolvePath(path);
+            if(typeof t !== 'function') return log(`目标节点非函数，Fuzz 中止`, 'c-err');
+
+            log(`[Fuzz] 启动接口连通性自动推断: ${path}`, 'c-warn');
+            let success = false;
+
+            function nextFuzz(idx) {
+                if (success || idx >= FUZZ_PARAMS.length) {
+                    if (!success) log(`[Fuzz] 发送完毕，所有形态参数均被容器异常拦截或抛错。`, 'c-err');
+                    return;
+                }
+                let param = FUZZ_PARAMS[idx];
+                try {
+                    let arg = param;
+                    if(param === "null") arg = null; else if(param === "undefined") arg = undefined; else { try{arg=JSON.parse(param);}catch(e){} }
+                    
+                    t.call(p, arg);
+                    log(`🎉 [连通成功] 接口放行！该函数接受的有效参数推测为: ${typeof arg} (${safeStr(param)})`, 'c-ok');
+                    success = true; 
+                } catch(e) {
+                    log(`[Fuzz] 参数试探失败: ${safeStr(param).toString().substring(0,15)}...`, 'c-sys');
+                    setTimeout(() => nextFuzz(idx + 1), 20);
+                }
+            }
+            nextFuzz(0);
+        },
+
+        brute: function() {
+            const tName = document.getElementById('brute-target').value;
+            if(!tName) return alert("请先选择目标");
+            
+            let { target: targetObj } = resolvePath(tName);
+            if(!targetObj) return log(`[Error] 无法解析目标 ${tName}`, 'c-err');
+
+            const progDiv = document.getElementById('brute-progress');
+            progDiv.style.display = "block";
+            document.getElementById('btn-brute').disabled = true;
+            
+            let idx = 0, found = 0;
+            log(`[Brute] 开始对 ${tName} 进行字典补充探测...`, 'c-warn');
+
+            let scanItem = scanData.find(i => i.name === tName);
+
+            function step() {
+                if(idx >= BRUTE_DICT.length) {
+                    document.getElementById('btn-brute').disabled = false;
+                    progDiv.innerText = `探测完毕，发现 ${found} 个隐藏入口。`;
+                    log(`[Brute] 探测完毕，发现 ${found} 个隐藏入口。`, 'c-ok');
+                    renderList();
+                    if(document.getElementById('exec-path').value.includes(tName)) renderTree(scanItem);
+                    return;
+                }
+                const mName = BRUTE_DICT[idx];
+                progDiv.innerText = `探测进度: .${mName}() [${idx+1}/${BRUTE_DICT.length}]`;
+                
+                try {
+                    if(mName in targetObj && !scanItem.methods.some(m => m.name === mName)) {
+                        found++;
+                        // 爆破出来的方法，也用 toString 判断下是不是 Native
+                        let isNat = false;
+                        try { if(typeof targetObj[mName]==='function' && targetObj[mName].toString().includes('[native code]')) isNat=true; } catch(e){}
+                        scanItem.methods.push({ name: mName, type: "function", info: evalRisk(mName), isNative: isNat });
+                        log(`🎯 命中隐藏接口: .${mName}()`, 'c-hook');
+                    }
+                } catch(e) {
+                    if(!scanItem.methods.some(m => m.name === mName)) {
+                        found++;
+                        scanItem.methods.push({ name: mName, type: "function", info: evalRisk(mName) });
+                        log(`🎯 越权拦截验证存在: .${mName}()`, 'c-err');
+                    }
+                }
+                idx++; setTimeout(step, 5);
+            }
+            step();
+        },
+
+        deeplink: function() {
+            let url = document.getElementById('exec-params').value.trim() || document.getElementById('exec-path').value.trim();
+            if(!url.includes('://')) return log("! 盲发必须输入完整的 URI Scheme (如 app://)", "c-err");
+
+            log(`> 盲发 Deeplink: ${url}`, 'c-warn');
+            const cbName = "_cb_" + Date.now();
+            window[cbName] = function(res) { log(`🔥 Scheme回调: ${safeStr(res)}`, "c-hook"); };
+            
+            const fUrl = url.includes("?") ? `${url}&callback=${cbName}` : `${url}?callback=${cbName}`;
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none"; iframe.src = fUrl;
+            document.body.appendChild(iframe);
+            setTimeout(() => iframe.remove(), 3000);
+        },
+
+        hook: function() {
+            if(isHooked) return log('AOP 已在运行中，重置请刷新页面。', 'c-warn');
+            let hCount = 0;
+            
+            scanData.forEach(item => {
+                let { target: obj } = resolvePath(item.name);
+                if(typeof obj === 'object' && obj !== null) {
+                    item.methods.forEach(m => {
+                        const cleanName = m.name.replace(/ \[.*?\]/g, "");
+                        if(typeof obj[cleanName] === 'function' && !obj[cleanName].__hooked) {
+                            try {
+                                const orig = obj[cleanName];
+                                obj[cleanName] = function(...args) {
+                                    log(`[AOP 动态拦截] <b>${item.name}.${cleanName}</b>( ${args.map(a=>safeStr(a)).join(', ')} )`, 'c-hook');
+                                    return orig.apply(this, args);
+                                };
+                                obj[cleanName].__hooked = true;
+                                hCount++;
+                            } catch(e){} 
+                        }
+                    });
+                }
+            });
+            window.addEventListener("message", e => log(`[异步推送捕获] Msg: ${safeStr(e.data)}`, 'c-hook'));
+            isHooked = true;
+            document.getElementById('btn-hook').innerText = "🛑 监听中...";
+            log(`[P3] AOP 拦截网部署完成，已静默代理 ${hCount} 个原生接口。`, 'c-ok');
+        },
+
+        export: function() {
+            let md = `# JSBridge 安全扫描报告\n\n> **生成时间:** ${new Date().toLocaleString()}\n> **环境指纹:** ${document.getElementById('bridge-badge').innerText}\n> **UA:** ${navigator.userAgent}\n\n`;
+            
+            md += `## 注入对象发现 (${scanData.length}个)\n`;
+            scanData.forEach(obj => {
+                md += `\n### \`window.${obj.name}\` [${obj.info.cat}]\n`;
+                if(obj.methods.length > 0) {
+                    obj.methods.forEach(m => {
+                        const natStr = m.isNative ? ' `[Native]`' : '';
+                        md += `- \`.${m.name}()\`${natStr} ${m.info.r !== 't-none' ? `**(🚨风险评估: ${m.info.desc})**` : ''}\n`;
+                    });
+                } else {
+                    md += `- *(未暴露公共子属性)*\n`;
+                }
+            });
+
+            document.getElementById('md-body').innerText = md;
+            document.getElementById('md-modal').style.display = 'flex';
+        },
+
+        copyReport: function() {
+            const ta = document.createElement("textarea");
+            ta.value = document.getElementById('md-body').innerText; 
+            document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+            alert("Markdown 报告复制成功！");
+        }
+    };
+})();
+
+setTimeout(window.__WVS__.init, 400);
+</script>
+</body>
+</html>
