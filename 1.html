@@ -20,8 +20,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; background: var(--bg); color: var(--text); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* 头部 */
-    .header { background: var(--card); padding: env(safe-area-inset-top) 10px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 8px;}
+    .header { background: var(--card); padding: env(safe-area-inset-top) 15px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 8px;}
     .header h1 { font-size: 16px; color: var(--blue); text-shadow: 0 0 10px rgba(0,229,255,0.3); }
     .bridge-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid var(--blue); background: rgba(0,229,255,0.1); color: var(--blue); }
     
@@ -31,25 +30,20 @@
     .btn.danger { background: rgba(255, 51, 102, 0.1); border-color: var(--red); color: var(--red); }
     .btn.warn { background: rgba(255, 193, 7, 0.1); border-color: var(--yellow); color: var(--yellow); }
 
-    /* 移动端 5-Tab 栏 (横向滚动防挤压) */
-    .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; width: 100%; overflow-x: auto; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tab { flex: 1; min-width: 60px; text-align: center; padding: 12px 4px; font-size: 12px; font-weight: bold; color: var(--text-dim); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;}
+    .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .tab { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; font-weight: bold; color: var(--text-dim); border-bottom: 2px solid transparent; cursor: pointer;}
     .tab.active { color: var(--blue); border-bottom-color: var(--blue); background: rgba(0,229,255,0.05);}
 
-    /* 布局 */
     .workspace { display: flex; flex: 1; overflow: hidden; position: relative;}
     .panel { display: none; flex-direction: column; background: var(--bg); width: 100%; height: 100%; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom);}
     .panel.active { display: flex; }
     .panel-title { background: var(--card); padding: 10px 12px; font-weight: bold; color: var(--text); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; position: sticky; top: 0; z-index: 10;}
     .panel-body { padding: 12px; display: flex; flex-direction: column; flex: 1;}
 
-    /* 环境变量面板 */
     .env-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
-    .env-label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; font-weight: bold; text-transform: uppercase;}
+    .env-label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; font-weight: bold; }
     .env-val { font-family: monospace; font-size: 12px; color: var(--green); word-break: break-all; max-height: 100px; overflow-y: auto; }
 
-    /* 对象列表 */
     .search-box { width: 100%; padding: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; outline: none; margin-bottom: 10px; font-family: monospace;}
     .obj-item { padding: 10px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; cursor: pointer; border-left: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; }
     .obj-item.active { border-left-color: var(--blue); background: var(--card-hover); }
@@ -57,7 +51,6 @@
     .tag { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; color: #fff; }
     .t-crit { background: var(--red); } .t-high { background: var(--orange); } .t-med { background: var(--yellow); color: #000;} .t-low { background: var(--green); color: #000;} .t-none { background: var(--border); }
 
-    /* 树形结构 */
     .tree-item { display: flex; align-items: center; gap: 6px; padding: 6px 0; font-size: 13px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.02);}
     .tree-toggle { width: 16px; cursor: pointer; color: var(--text-dim); text-align: center; }
     .tree-key { font-family: monospace; cursor: pointer; font-weight: bold; color: var(--blue); }
@@ -65,25 +58,23 @@
     .tree-children { margin-left: 18px; display: none; border-left: 1px dashed var(--border); padding-left: 6px;}
     .tree-children.show { display: block; }
 
-    /* 终端控制台 */
-    .input-base { width: 100%; padding: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: monospace; outline: none; margin-bottom: 10px; font-size: 13px;}
+    .input-base { width: 100%; padding: 10px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; font-family: monospace; outline: none; margin-bottom: 10px; }
     .input-base:focus { border-color: var(--blue); }
     .control-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; width: 100%;}
     
-    .terminal { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 12px; flex: 1; overflow-y: auto; font-family: "Courier New", monospace; font-size: 11px; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); min-height: 180px;}
+    .terminal { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 12px; height: 220px; overflow-y: auto; font-family: "Courier New", monospace; font-size: 12px; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);}
     .log-line { margin-bottom: 6px; word-break: break-all; line-height: 1.4;}
     .c-time { color: var(--text-dim); margin-right: 5px; user-select: none;}
     .c-ok { color: var(--green); } .c-err { color: var(--red); } .c-sys { color: var(--blue); } .c-warn { color: var(--yellow); } .c-hook { color: var(--purple); }
 
-    /* 弹窗 */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; padding: env(safe-area-inset-top) 15px 15px; flex-direction: column;}
     .modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 8px; flex: 1; display: flex; flex-direction: column; overflow: hidden; max-width: 800px; margin: 0 auto; width: 100%;}
     .modal-body { flex: 1; padding: 15px; overflow-y: auto; font-family: monospace; font-size: 12px; white-space: pre-wrap; -webkit-user-select: text; user-select: text; }
 
     @media (min-width: 900px) {
         .tabs { display: none; }
-        .workspace { flex-direction: row; flex-wrap: wrap;}
-        .panel { display: flex !important; border-right: 1px solid var(--border); height: 100%; width: 25%; border-bottom: none;}
+        .workspace { flex-direction: row; }
+        .panel { display: flex !important; border-right: 1px solid var(--border); height: 100%; width: 25%; }
         .panel:last-child { border-right: none; }
     }
 </style>
@@ -106,9 +97,8 @@
 <div class="tabs">
     <div class="tab active" onclick="switchTab(0)">🌐 环境</div>
     <div class="tab" onclick="switchTab(1)">📦 对象</div>
-    <div class="tab" onclick="switchTab(2)">🔥 撞库</div>
-    <div class="tab" onclick="switchTab(3)">🌳 解析</div>
-    <div class="tab" onclick="switchTab(4)">📡 终端</div>
+    <div class="tab" onclick="switchTab(2)">🌳 解析</div>
+    <div class="tab" onclick="switchTab(3)">📡 终端</div>
 </div>
 
 <div class="workspace">
@@ -128,25 +118,23 @@
     <div class="panel">
         <div class="panel-title">
             <span>📦 注入对象池 (<span id="obj-count">0</span>)</span>
-            <button class="btn primary" style="padding: 2px 8px;" onclick="__WVS__.scan()">🔄 扫描</button>
+            <button class="btn primary" style="padding: 2px 8px;" onclick="__WVS__.scan()">🔄 重新扫描</button>
         </div>
-        <div class="panel-body">
+        <div class="panel-body" style="padding: 10px; display: flex; flex-direction: column; height: 100%;">
             <input type="text" class="search-box" id="search-input" placeholder="搜索对象名称..." oninput="__WVS__.filter()">
-            <div id="obj-list" style="flex: 1; overflow-y: auto;"></div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="panel-title">
-            <span>🔥 字典爆破 (Brute Force)</span>
-        </div>
-        <div class="panel-body">
-            <div style="background:rgba(255,51,102,0.1); border-left:3px solid var(--red); padding:12px; font-size:12px; margin-bottom:15px; color:var(--text); line-height: 1.5; border-radius: 4px;">
-                <strong>针对性脱壳：</strong> 如果你在对象池中发现某个原生对象没有暴露任何子方法（疑似被 <code>@JavascriptInterface</code> 隐藏或混淆），请在此处使用安全 <code>in</code> 操作符强行撞库。
+            <div id="obj-list" style="flex: 1; overflow-y: auto; margin-bottom: 10px; border-bottom: 1px solid var(--border);"></div>
+            
+            <div style="flex-shrink: 0; background: var(--card); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                <div style="color:var(--red); font-weight:bold; margin-bottom:8px;">🔥 字典补充探测 (P1)</div>
+                <div style="font-size:11px; color:var(--text-dim); margin-bottom:10px; line-height:1.4;">
+                    部分原生 API 因属性不可枚举导致自动提取遗漏，在此使用字典进行安全探测。
+                </div>
+                <div class="control-row" style="margin-bottom:0;">
+                    <select id="brute-target" class="input-base" style="margin-bottom:0; flex: 1;"></select>
+                    <button class="btn danger" id="btn-brute" onclick="__WVS__.brute()">开始探测</button>
+                </div>
+                <div id="brute-progress" style="margin-top: 8px; text-align: center; color: var(--blue); font-size: 12px; font-family:monospace; font-weight: bold; display:none;"></div>
             </div>
-            <select id="brute-target" class="input-base" style="margin-bottom: 15px; font-size: 14px;"></select>
-            <button class="btn danger" style="width: 100%; padding: 12px; font-size: 14px;" id="btn-brute" onclick="__WVS__.brute()">💀 发起高频反射探测</button>
-            <div id="brute-progress" style="margin-top: 15px; text-align: center; color: var(--blue); font-size: 13px; font-family:monospace; font-weight: bold;">等待选择目标...</div>
         </div>
     </div>
 
@@ -159,7 +147,7 @@
             </div>
         </div>
         <div class="panel-body" id="tree-body">
-            <div style="text-align:center; padding: 40px; color: var(--text-dim);">👈 请在【对象池】选择对象</div>
+            <div style="text-align:center; padding: 40px; color: var(--text-dim);">👈 请在列表中选择对象</div>
         </div>
     </div>
 
@@ -168,14 +156,14 @@
             <span>📡 交互终端 (Terminal)</span>
             <button class="btn danger" style="padding: 2px 8px;" id="btn-hook" onclick="__WVS__.hook()">[P3] 部署 Hook</button>
         </div>
-        <div class="panel-body">
+        <div class="panel-body" style="display: flex; flex-direction: column;">
             <div class="terminal" id="term-box"></div>
             
             <div style="flex-shrink: 0;">
                 <input type="text" id="exec-path" class="input-base" style="color:var(--green); font-weight:bold;" placeholder="路径 (如: window.obj.func 或 jsbridge://)">
                 
                 <div class="control-row">
-                    <input type="text" id="exec-params" class="input-base" style="margin-bottom:0; flex:1;" placeholder='参数 / Payload (如 {"id":1})'>
+                    <input type="text" id="exec-params" class="input-base" style="margin-bottom:0; flex:1;" placeholder='参数 / Payload (如 {"id":1} 或 "test")'>
                     <label style="font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; white-space: nowrap;">
                         <input type="checkbox" id="use-cb"> Callback
                     </label>
@@ -183,7 +171,7 @@
                 
                 <div class="control-row">
                     <button class="btn primary" style="flex: 1;" onclick="__WVS__.execute()">⚡ 发送 Call</button>
-                    <button class="btn warn" style="flex: 1;" onclick="__WVS__.fuzz()">🧪 Fuzz 验证</button>
+                    <button class="btn warn" style="flex: 1;" onclick="__WVS__.fuzz()">🧪 连通探测</button>
                     <button class="btn" style="flex: 1;" onclick="__WVS__.deeplink()">🔗 Deeplink</button>
                 </div>
             </div>
@@ -205,7 +193,6 @@
 </div>
 
 <script>
-// 选项卡控制
 function switchTab(index) {
     if(window.innerWidth > 900) return;
     document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
@@ -219,7 +206,6 @@ window.__WVS__ = (function() {
     const INTERNAL_KEYS = ["switchTab", "expandAll", "collapseAll", "toggleTheme", "__WVS__"];
     const IGNORES = ["apply", "bind", "call", "toString", "length", "name", "prototype", "constructor", "caller", "callee"];
     
-    // [P0] 结构化知识库
     const KNOWLEDGE = [
         { kw: ["exec","eval","shell","system"], cat: "命令执行", r: "t-crit", desc: "可执行系统级命令" },
         { kw: ["pay","alipay","wxpay"], cat: "支付接口", r: "t-crit", desc: "拉起支付结算链路" },
@@ -231,9 +217,10 @@ window.__WVS__ = (function() {
         { kw: ["location","gps"], cat: "物理定位", r: "t-med", desc: "获取真实GPS坐标" }
     ];
     
-    // [P1] 字典爆破库
+    // 探测隐藏 API 用字典
     const BRUTE_DICT = ["getUserInfo","getDeviceId","getToken","pay","getLocation","read","write","download","openUrl","startActivity","getContacts","invoke","execute","call","postMessage","showAddressBook","scanQRCode","closeWindow","setupWebViewJavascriptBridge"];
     
+    // 验证 API 连通性测试用的常用参数集合
     const FUZZ_PARAMS = [
         null, undefined, "", 0, 1, true, false,
         "test", "{}", "[]", '{"id":"1"}', '["test"]',
@@ -267,7 +254,6 @@ window.__WVS__ = (function() {
         return { target: t, parent: p };
     }
 
-    // 精准 OS & Bridge 指纹识别
     function detectEnvironment() {
         const ua = navigator.userAgent;
         document.getElementById('env-ua').innerText = ua;
@@ -290,7 +276,6 @@ window.__WVS__ = (function() {
         log(`环境探测: ${os} - ${fw}`);
     }
 
-    // [P0] 准确发现
     function scan() {
         let keys = [];
         try {
@@ -368,7 +353,7 @@ window.__WVS__ = (function() {
                 document.querySelectorAll('.obj-item').forEach(el => el.classList.remove('active'));
                 div.classList.add('active');
                 renderTree(item);
-                if(window.innerWidth <= 900) switchTab(3); // 选中后切到解析 Tab
+                if(window.innerWidth <= 900) switchTab(2);
             };
             list.appendChild(div);
         });
@@ -434,7 +419,7 @@ window.__WVS__ = (function() {
 
     function updateBruteSelect() {
         const sel = document.getElementById('brute-target');
-        sel.innerHTML = '<option value="">-- 请选择要脱壳的注入对象 --</option>';
+        sel.innerHTML = '<option value="">-- 选择探测目标 --</option>';
         scanData.forEach(i => {
             if(typeof i.objRef === 'object' && !i.name.includes("messageHandlers")) {
                 sel.innerHTML += `<option value="${i.name}">window.${i.name}</option>`;
@@ -463,10 +448,9 @@ window.__WVS__ = (function() {
             const cleanPath = path.replace(/ \[.*?\]/g, "");
             document.getElementById('exec-path').value = cleanPath;
             log(`已装载测试路径: ${cleanPath}`, 'c-warn');
-            if(window.innerWidth <= 900) switchTab(4); // 移动端切到终端
+            if(window.innerWidth <= 900) switchTab(3);
         },
 
-        // [P1] 接口调用
         execute: function() {
             const path = document.getElementById('exec-path').value.replace("window.", "");
             const pRaw = document.getElementById('exec-params').value.trim();
@@ -503,12 +487,13 @@ window.__WVS__ = (function() {
             } catch(e) { log(`! 执行异常: ${e.message}`, 'c-err'); }
         },
 
+        // 测试接口参数类型，探测连通性
         fuzz: function() {
             const path = document.getElementById('exec-path').value.replace("window.", "");
             if(!path) return alert("请指定执行路径");
             
             let { target: t, parent: p } = resolvePath(path);
-            if(typeof t !== 'function') return log(`目标非函数，无法Fuzz`, 'c-err');
+            if(typeof t !== 'function') return log(`目标非函数，无法进行探测`, 'c-err');
 
             log(`[Fuzz] 开始连通性探测: ${path}`, 'c-warn');
             let success = false;
@@ -524,42 +509,44 @@ window.__WVS__ = (function() {
                     if(param === "null") arg = null; else if(param === "undefined") arg = undefined; else { try{arg=JSON.parse(param);}catch(e){} }
                     
                     t.call(p, arg);
-                    log(`🎉 [Fuzz 成功] 该接口成功连通！接受的参数类型为: ${typeof arg} (${safeStr(param)})`, 'c-ok');
+                    log(`🎉 [Fuzz 成功] 接口连通！接受的参数类型为: ${typeof arg} (${safeStr(param)})`, 'c-ok');
                     success = true; 
                 } catch(e) {
-                    log(`[Fuzz ${idx+1}] 参数: ${safeStr(param).substring(0,10)} -> 失败拦截`, 'c-err');
+                    log(`[Fuzz] 参数尝试: ${safeStr(param).substring(0,10)} -> 失败或被拦截`, 'c-sys');
                     setTimeout(() => nextFuzz(idx + 1), 50);
                 }
             }
             nextFuzz(0);
         },
 
-        // [P1] 安全的 in 操作符方法爆破
+        // 补充探测模块：安置于面板1底部
         brute: function() {
             const tName = document.getElementById('brute-target').value;
-            if(!tName) return alert("请先在下拉框选择爆破目标！");
+            if(!tName) return alert("请先选择目标");
             
             let { target: targetObj } = resolvePath(tName);
             if(!targetObj) return log(`[Error] 无法解析目标 ${tName}`, 'c-err');
 
             const progDiv = document.getElementById('brute-progress');
+            progDiv.style.display = "block";
             document.getElementById('btn-brute').disabled = true;
+            
             let idx = 0, found = 0;
-            log(`[Brute] 开始对 ${tName} 撞库...`, 'c-warn');
+            log(`[Brute] 开始对 ${tName} 进行字典补充探测...`, 'c-warn');
 
             let scanItem = scanData.find(i => i.name === tName);
 
             function step() {
                 if(idx >= BRUTE_DICT.length) {
                     document.getElementById('btn-brute').disabled = false;
-                    progDiv.innerText = `爆破结束：撞击 ${BRUTE_DICT.length} 次，逼出 ${found} 个隐藏入口。`;
-                    log(`[Brute] 完毕，逼出 ${found} 个隐藏入口。`, 'c-ok');
+                    progDiv.innerText = `探测完毕，发现 ${found} 个隐藏入口。`;
+                    log(`[Brute] 探测完毕，发现 ${found} 个隐藏入口。`, 'c-ok');
                     renderList();
                     if(document.getElementById('exec-path').value.includes(tName)) renderTree(scanItem);
                     return;
                 }
                 const mName = BRUTE_DICT[idx];
-                progDiv.innerText = `探测: .${mName}() [${idx+1}/${BRUTE_DICT.length}]`;
+                progDiv.innerText = `探测进度: .${mName}() [${idx+1}/${BRUTE_DICT.length}]`;
                 
                 try {
                     if(mName in targetObj && !scanItem.methods.some(m => m.name === mName)) {
@@ -571,7 +558,7 @@ window.__WVS__ = (function() {
                     if(!scanItem.methods.some(m => m.name === mName)) {
                         found++;
                         scanItem.methods.push({ name: mName, type: "function", info: evalRisk(mName) });
-                        log(`🎯 触发越权拦截，接口存在: .${mName}()`, 'c-err');
+                        log(`🎯 越权拦截验证存在: .${mName}()`, 'c-err');
                     }
                 }
                 idx++; setTimeout(step, 10);
@@ -594,7 +581,6 @@ window.__WVS__ = (function() {
             setTimeout(() => iframe.remove(), 3000);
         },
 
-        // [P3] 全局 Hook
         hook: function() {
             if(isHooked) return log('Hook 已开启，重置请刷新', 'c-warn');
             let hCount = 0;
@@ -624,7 +610,6 @@ window.__WVS__ = (function() {
             log(`[P3] AOP 部署完成，接管了 ${hCount} 个底层入口。`, 'c-ok');
         },
 
-        // [P2] 导出报告
         export: function() {
             let md = `# JSBridge 安全扫描报告\n\n> **扫描时间:** ${new Date().toLocaleString()}\n> **环境指纹:** ${document.getElementById('bridge-badge').innerText}\n> **UA:** ${navigator.userAgent}\n\n`;
             
@@ -636,7 +621,7 @@ window.__WVS__ = (function() {
                         md += `- \`.${m.name}()\` ${m.info.r !== 't-none' ? `**(🚨风险: ${m.info.desc})**` : ''}\n`;
                     });
                 } else {
-                    md += `- *(未暴露子属性，疑似 Java 注解保护)*\n`;
+                    md += `- *(未自动枚举出子属性，建议使用字典补充探测)*\n`;
                 }
             });
 
@@ -653,7 +638,6 @@ window.__WVS__ = (function() {
     };
 })();
 
-// 引擎启动：延迟 400ms，兼容异步容器
 setTimeout(window.__WVS__.init, 400);
 </script>
 </body>
